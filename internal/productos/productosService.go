@@ -9,6 +9,7 @@ import (
 type Service interface {
 
 	BuscarProducto(id int) (domain.Producto, error)
+    BuscarTodosLosProductos() ([]domain.Producto, error)
 	CrearProducto(p domain.Producto) (domain.Producto, error)
 	UpdateProducto(id int, p domain.Producto) (domain.Producto, error)
 	DeleteProducto(id int) error
@@ -44,6 +45,17 @@ func (s *service) BuscarProducto(id int) (domain.Producto, error) {
 	}
 	return p, nil
 }
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE TODOS LOS PRODUCTOS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+func (s *service) BuscarTodosLosProductos() ([]domain.Producto, error) {
+	productos, err := s.r.BuscarTodosLosProductos()
+	if err != nil {
+		return nil, fmt.Errorf("error buscando todos los productos: %w", err)
+	}
+	return productos, nil
+}
+
+
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA  UN  PRODUCTO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *service) UpdateProducto(id int, u domain.Producto) (domain.Producto, error) {
 	// Llama directamente a la actualización en el repositorio

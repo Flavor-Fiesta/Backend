@@ -1,7 +1,6 @@
 package imagenes
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/jfcheca/FlavorFiesta/internal/domain"
@@ -13,7 +12,6 @@ type Service interface {
 	CrearImagen(p domain.Imagen) (domain.Imagen, error)
 	DeleteImagen(id int) error
 	UpdateImagen(id int, p domain.Imagen) (domain.Imagen, error)
-	ExisteProductoParaImagen(id int) (bool, error)
 	
 }
 
@@ -30,27 +28,11 @@ func NewService(r Repository) Service {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR UN NUEVO IMAGEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *service) CrearImagen(p domain.Imagen) (domain.Imagen, error) {
-    // 1. Verificar la existencia del ProductoID
-    exists, err := s.ExisteProductoParaImagen(p.ProductoID)
-    if err != nil {
-        return domain.Imagen{}, err // Manejar el error si ocurre alguno al verificar la existencia del producto
-    }
-    if !exists {
-        return domain.Imagen{}, errors.New("ProductoID does not exist") // Devolver un error si el ProductoID no existe
-    }
-
-    // 2. Llamar a la función de almacenamiento para crear la imagen
-    createdImagen, err := s.r.CrearImagen(p)
-    if err != nil {
-        return domain.Imagen{}, err // Manejar el error si la creación de la imagen falla
-    }
-
-    return createdImagen, nil
-}
-
-func (s *service) ExisteProductoParaImagen(id int) (bool, error) {
-    // Llamar al repositorio para verificar la existencia del producto por su ID
-    return s.r.ExisteProductoParaImagen(id)
+	p, err := s.r.CrearImagen(p)
+	if err != nil {
+		return domain.Imagen{}, err
+	}
+	return p, nil
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE IMAGEN POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

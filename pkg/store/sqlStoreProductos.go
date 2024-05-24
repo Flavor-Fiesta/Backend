@@ -69,6 +69,34 @@ func (s *sqlStoreProductos) BuscarProducto(id int) (domain.Producto, error) {
     return producto, nil
 }
 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  BUSCAR TODOS LOS PRODUCTOS<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+func (s *sqlStoreProductos) BuscarTodosLosProductos() ([]domain.Producto, error) {
+	var productos []domain.Producto
+	query := "SELECT id, nombre, codigo, categoria, fecha_alta, fecha_vencimiento FROM productos"
+
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("error querying usuarios: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var producto domain.Producto
+		if err := rows.Scan(&producto.ID, &producto.Nombre, &producto.Codigo, &producto.Categoria, &producto.FechaDeAlta, &producto.FechaDeVencimiento); err != nil {
+			return nil, fmt.Errorf("error scanning producto: %w", err)
+		}
+		productos = append(productos, producto)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return productos, nil
+}
+
+
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA UN PRODUCTO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStoreProductos) UpdateProducto(id int, p domain.Producto) error {
 	// Preparar la consulta SQL para actualizar el producto

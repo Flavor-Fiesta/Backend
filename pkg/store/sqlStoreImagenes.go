@@ -20,19 +20,23 @@ func NewSqlStoreImagen(db *sql.DB) StoreInterfaceImagenes {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR UNA NUEVA IMAGEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStore) CrearImagen(imagen domain.Imagen) error {
-	query := "INSERT INTO imagenes (producto_id, titulo, url) VALUES (?, ?, ?);"
+	query := "INSERT INTO imagenes (id_producto, titulo, url) VALUES (?, ?, ?);"
 	stmt, err := s.db.Prepare(query)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("error preparing query: %w", err)
 	}
-	res, err := stmt.Exec(imagen.ProductoID, imagen.Titulo, imagen.Url)
+	defer stmt.Close()
+
+	res, err := stmt.Exec(imagen.Id_producto, imagen.Titulo, imagen.Url)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("error executing query: %w", err)
 	}
+
 	_, err = res.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("error fetching rows affected: %w", err)
 	}
+
 	return nil
 }
 func (s *sqlStore) ExisteProductoParaImagen(id int) (bool, error) {
@@ -100,7 +104,7 @@ func (s *sqlStore) UpdateImagen(id int, p domain.Imagen) error {
 	query := "UPDATE imagenes SET producto_id = ?, titulo = ?, url = ? WHERE id = ?;"
 
 	// Ejecutar la consulta SQL
-	result, err := s.db.Exec(query,p.ProductoID, p.Titulo, p.Url,id)
+	result, err := s.db.Exec(query,p.Id_producto, p.Titulo, p.Url,id)
 	if err != nil {
 		return err // Devolver el error si ocurre alguno al ejecutar la consulta
 	}
@@ -173,7 +177,19 @@ func (s *sqlStore) DeleteImagen(id int) error {
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> VERIFICA SI EXISTE PRODUCTO CON ESE ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
+func (s *sqlStore) ExistsByIDImagen(id int) bool {
+	// Preparar la consulta SQL para verificar si un odontólogo con el ID dado existe
+	query := "SELECT COUNT(*) FROM productos WHERE id = ?"
+	// Ejecutar la consulta SQL y obtener el número de filas devueltas
+	var count int
+	err := s.db.QueryRow(query, id).Scan(&count)
+	if err != nil {
+		// Manejar el error, por ejemplo, loguearlo o devolver false si ocurre un error
+		return false
+	}
+	// Si el número de filas devueltas es mayor que cero, significa que el odontólogo con el ID dado existe
+	return count > 0
+}
 //************************************************************************************************************************************//
 
 

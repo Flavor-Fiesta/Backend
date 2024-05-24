@@ -12,6 +12,7 @@ import (
 type Repository interface {
 
 	BuscarProducto(id int) (domain.Producto, error)
+    BuscarTodosLosProductos() ([]domain.Producto, error)
 	CrearProducto(p domain.Producto) (domain.Producto, error)
 	UpdateProducto(id int, p domain.Producto) (domain.Producto, error)
 	DeleteProducto(id int) error
@@ -47,6 +48,17 @@ func (r *repository) BuscarProducto(id int) (domain.Producto, error) {
 	return producto, nil
 
 }
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR TODOS LOS PRODUCTOS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+func (r *repository) BuscarTodosLosProductos() ([]domain.Producto, error) {
+	productos, err := r.storage.BuscarTodosLosProductos()
+	if err != nil {
+		return nil, fmt.Errorf("error buscando todos los productos: %w", err)
+	}
+	return productos, nil
+}
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZAR PRODUCTO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 func (r *repository) UpdateProducto(id int, p domain.Producto) (domain.Producto, error) {
 	// Verificar si el producto existe por su ID

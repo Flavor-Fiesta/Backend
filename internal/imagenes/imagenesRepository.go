@@ -14,7 +14,6 @@ type Repository interface {
 	CrearImagen(p domain.Imagen) (domain.Imagen, error)
 	UpdateImagen(id int, p domain.Imagen) (domain.Imagen, error)
 	DeleteImagen(id int) error
-	ExisteProductoParaImagen(id int) (bool, error)
 }
 
 type repository struct {
@@ -29,27 +28,14 @@ func NewRepository(storage store.StoreInterfaceImagenes) Repository {
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR IMAGEN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	func (r *repository) CrearImagen(p domain.Imagen) (domain.Imagen, error) {
-		// Crear la imagen en el almacenamiento
-		err := r.storage.CrearImagen(p)
-		if err != nil {
-			return domain.Imagen{}, errors.New("error creando odontologo")
-		}
-		return p, nil
+func (r *repository) CrearImagen(p domain.Imagen) (domain.Imagen, error) {
+	// Crear el odontólogo en el almacenamiento
+	err := r.storage.CrearImagen(p)
+	if err != nil {
+		return domain.Imagen{}, errors.New("error creando paciente")
 	}
-
-	func (r *repository) ExisteProductoParaImagen(id int) (bool, error) {
-		// Llamar a la función en tu SQL store para verificar la existencia de la imagen por su ID
-		exists, err := r.storage.ExisteProductoParaImagen(id)
-		if err != nil {
-			fmt.Print("ACA SI LLEGA Y PASA")
-			return false, err // Devuelve el error si ocurre alguno
-		}
-		fmt.Print("REVISANDO SI TRAE ALGO: ", exists)
-		return exists, nil // Devuelve el resultado de la verificación
-		
-	}
-	
+	return p, nil
+}
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR IMAGEN POR ID >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 func (r *repository) BuscarImagen(id int) (domain.Imagen, error) {
 	product, err := r.storage.BuscarImagen(id)
@@ -63,20 +49,16 @@ func (r *repository) BuscarImagen(id int) (domain.Imagen, error) {
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZAR IMAGEN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 func (r *repository) UpdateImagen(id int, p domain.Imagen) (domain.Imagen, error) {
 	// Verificar si la imagen existe por su ID
-	exists, err := r.storage.ExisteProductoParaImagen(id)
-	if err != nil {
-		return domain.Imagen{}, err // Devuelve el error si ocurre alguno
-	}
-	if !exists {
-		return domain.Imagen{}, fmt.Errorf("Odontologo con ID %d no encontrado", id)
+	if !r.storage.ExistsByIDImagen(id) {
+		return domain.Imagen{}, fmt.Errorf("Imagen con ID %d no encontrada", id)
 	}
 
 	// Actualizar la imagen en el almacenamiento
-	err = r.storage.UpdateImagen(id, p)
+	err := r.storage.UpdateImagen(id, p)
 	if err != nil {
 		return domain.Imagen{}, err
 	}
-	// Retorna la imagen actualizada
+
 	return p, nil
 }
 

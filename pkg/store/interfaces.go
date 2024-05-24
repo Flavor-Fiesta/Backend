@@ -8,6 +8,7 @@ import (
 type StoreInterfaceProducto interface {
 	// Read devuelve un odontologo por su id
 	BuscarProducto(id int) (domain.Producto, error)
+	BuscarTodosLosProductos() ([]domain.Producto, error)
 	// Create agrega un nuevo odontologo
 	CrearProducto(odonto domain.Producto) error
 	// Update actualiza un odontologo
@@ -29,10 +30,22 @@ type StoreInterfaceImagenes interface {
 	UpdateImagen(id int, p domain.Imagen) error
 	// Delete elimina un odontologo
 	DeleteImagen(id int) error
-	ExisteProductoParaImagen(id int) (bool, error)
     PatchImagen(id int, updatedFields map[string]interface{}) error	
+	ExistsByIDImagen(id int) bool
 
 }
+
+type StoreInterfaceUsuarios interface {
+
+	CrearUsuario(usuario domain.Usuarios) error
+	BuscarUsuario(id int) (domain.Usuarios, error)
+	BuscarTodosLosUsuarios() ([]domain.Usuarios, error)
+	UpdateUsuario(id int, p domain.Usuarios) error
+	DeleteUsuario(id int) error
+	ExistsByIDUsuario(id int) (bool, error)
+    PatchUsuario(id int, updatedFields map[string]interface{}) error
+}
+
 
 /*type StoreInterfaceProductoImagen interface {
 	// Read devuelve un paciente por su id
