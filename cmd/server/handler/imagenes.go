@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -24,41 +23,28 @@ func NewImagenHandler(s imagenes.Service) *imagenesHandler {
 }
 
 var listaImagenes []domain.Imagen
-var ultimoID int = 1
+var ultimaImagenID int = 1
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREA NUEVA IMAGEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (h *imagenesHandler) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var imagen domain.Imagen
-		imagen.ID = ultimoID
-		ultimoID++
+		imagen.ID = ultimaImagenID
+		ultimaImagenID++
 		err := c.ShouldBindJSON(&imagen)
 		if err != nil {
-			web.Failure(c, http.StatusBadRequest, errors.New("invalid json"))
-			return
-		}
-
-		// Verificar la existencia de la imagen
-		existsProducto, err := h.s.ExisteProductoParaImagen(imagen.ProductoID)
-		fmt.Println("  ProductoID recibido en controlador: ", imagen.ProductoID)
-		if err != nil {
-			web.Failure(c, http.StatusInternalServerError, errors.New("internal server error"))
-			fmt.Println("existsProducto:", existsProducto, "err:", err)
-			return
-		}
-		if !existsProducto {
-			web.Failure(c, http.StatusBadRequest, errors.New("Producto no encontradooooo"))
+			web.Failure(c, 400, errors.New("invalid json"))
 			return
 		}
 		// Crear la imagen utilizando el servicio
 		createdImagen, err := h.s.CrearImagen(imagen)
 		if err != nil {
-			web.Failure(c, http.StatusInternalServerError, errors.New("failed to create imagen"))
+			web.Failure(c, 500, errors.New("failed to create a new turno"))
 			return
 		}
-		// Devolver la imagen creada con su ID asignado a la base de datos
-		c.JSON(http.StatusOK, createdImagen)
-	}
+		// Devolver la imagen creado con su ID asignado a la base de datos
+		c.JSON(200, createdImagen)
+	}	
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE IMAGEN POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

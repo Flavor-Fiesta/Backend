@@ -9,6 +9,7 @@ import (
 	"github.com/jfcheca/FlavorFiesta/cmd/server/handler"
 	"github.com/jfcheca/FlavorFiesta/internal/imagenes"
 	"github.com/jfcheca/FlavorFiesta/internal/productos"
+	"github.com/jfcheca/FlavorFiesta/internal/usuarios"
 	"github.com/jfcheca/FlavorFiesta/pkg/store"
 
 	//	"github.com/jfcheca/Checa_Budai_FinalBack3/internal/domain"
@@ -73,24 +74,31 @@ func main() {
 		}
 	}
 	
+	// Configurar el enrutador Gin
+	r := gin.Default()
+	
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>PRODUCTOS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 	// Crear el almacenamiento SQL con la base de datos 'FlavorFiesta'
 	storage := store.NewSqlStoreProductos(bd)
 	repo := productos.NewRepository(storage)
 	service := productos.NewService(repo)
 	productoHandler := handler.NewProductHandler(service)
 
-	// Configurar el enrutador Gin
-	r := gin.Default()
 
 	// Rutas para el manejo de productos
 	productos := r.Group("/productos")
 	{
 		productos.GET("/:id", productoHandler.BuscarProducto())
+		productos.GET("/", productoHandler.GetAll())
 		productos.POST("/crear", productoHandler.Post())
 		productos.DELETE("/:id", productoHandler.Delete())
 		productos.PATCH("/:id", productoHandler.Patch())
 		productos.PUT("/:id", productoHandler.Put())
 	}
+
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>IMAGENES>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	// Crear el almacenamiento SQL con la base de datos 'FlavorFiesta'
 	storageImagen := store.NewSqlStoreImagen(bd)
@@ -106,6 +114,25 @@ func main() {
 		imagenes.DELETE("/:id", imagenHandler.Delete())
 		imagenes.PATCH("/:id", imagenHandler.Patch())
 		imagenes.PUT("/:id", imagenHandler.Put())
+	}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>USUARIOS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	// Crear el almacenamiento SQL con la base de datos 'FlavorFiesta'
+	storageUsuario := store.NewSqlStoreUsuarios(bd)
+	repoUsuario := usuarios.NewRepository(storageUsuario)
+	serviceUsuario := usuarios.NewService(repoUsuario)
+	usuariosHandler := handler.NewUsuarioHandler(serviceUsuario)
+
+	// Rutas para el manejo de imagenes
+	usuarios := r.Group("/usuarios")
+	{
+		usuarios.GET("/:id", usuariosHandler.GetByID())
+		usuarios.GET("/", usuariosHandler.GetAll())
+		usuarios.POST("/crear", usuariosHandler.Post())
+		usuarios.DELETE("/:id", usuariosHandler.DeleteUsuario())
+		usuarios.PATCH("/:id", usuariosHandler.Patch())
+		usuarios.PUT("/:id", usuariosHandler.Put())
 	}
 
 /*

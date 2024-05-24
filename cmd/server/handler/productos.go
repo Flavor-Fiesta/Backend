@@ -73,6 +73,19 @@ func (h *productoHandler) BuscarProducto() gin.HandlerFunc {
 	}
 }
 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE TODOS LOS PRODUCTOS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+func (h *productoHandler) GetAll() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		productos, err := h.s.BuscarTodosLosProductos()
+		if err != nil {
+			web.Failure(c, 500, fmt.Errorf("error buscando todos los productos: %w", err))
+			return
+		}
+		web.Success(c, 200, productos)
+	}
+}
+
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA PRODUCTO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
