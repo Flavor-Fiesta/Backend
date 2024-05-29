@@ -1,3 +1,11 @@
+DROP TABLE IF EXISTS `carrito`;
+DROP TABLE IF EXISTS `carritosorden`;
+DROP TABLE IF EXISTS `productos`;
+DROP TABLE IF EXISTS `imagenes`;
+DROP TABLE IF EXISTS `categoria`;
+DROP TABLE IF EXISTS `usuarios`;
+DROP TABLE IF EXISTS `ordenes`;
+
 CREATE TABLE IF NOT EXISTS productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
@@ -5,22 +13,21 @@ CREATE TABLE IF NOT EXISTS productos (
     categoria VARCHAR(255) NOT NULL,
     fecha_alta VARCHAR(255) NOT NULL,
     fecha_vencimiento VARCHAR(255) NOT NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS imagenes (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    producto_id INT NOT NULL,  -- Agregar este campo para la relación
+    producto_id INT NOT NULL,  
     titulo VARCHAR(255) NOT NULL,
     url VARCHAR(255) NOT NULL,
     FOREIGN KEY (producto_id) REFERENCES productos(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS categoria (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
     descripcion VARCHAR(255) NOT NULL
-
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -28,5 +35,34 @@ CREATE TABLE IF NOT EXISTS usuarios (
     email VARCHAR(255) NOT NULL,
     telefono VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-);
+CREATE TABLE IF NOT EXISTS ordenes (
+  OrdenID INT AUTO_INCREMENT PRIMARY KEY,
+  fechaOrden DATE NOT NULL,
+  total DECIMAL(10,2) NOT NULL,
+  estado VARCHAR(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS carrito (
+  CarritoID INT NOT NULL,
+  UsuarioID INT DEFAULT NULL,
+  ProductoID INT DEFAULT NULL,
+  Total DECIMAL(50,0) NOT NULL,
+  PRIMARY KEY (CarritoID),
+  KEY UsuarioID (UsuarioID),
+  KEY ProductoID (ProductoID),
+  CONSTRAINT carrito_ibfk_1 FOREIGN KEY (UsuarioID) REFERENCES usuarios(id),
+  CONSTRAINT carrito_ibfk_2 FOREIGN KEY (ProductoID) REFERENCES productos(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS carritosorden (
+  OrdenID INT NOT NULL,
+  CarritoID INT NOT NULL,
+  Cantidad INT NOT NULL,
+  PrecioUnitario DECIMAL(10,2) NOT NULL,
+  PRIMARY KEY (OrdenID, CarritoID),
+  KEY CarritoID (CarritoID),
+  CONSTRAINT carritosorden_ibfk_1 FOREIGN KEY (OrdenID) REFERENCES ordenes(OrdenID),
+  CONSTRAINT carritosorden_ibfk_2 FOREIGN KEY (CarritoID) REFERENCES carrito(CarritoID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
