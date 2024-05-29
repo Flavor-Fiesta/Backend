@@ -45,7 +45,13 @@ type StoreInterfaceUsuarios interface {
 	ExistsByIDUsuario(id int) (bool, error)
     PatchUsuario(id int, updatedFields map[string]interface{}) error
 }
+type StoreInterfaceCarritos interface {
 
+	CrearCarrito(carrito domain.Carrito) error
+	UpdateCarrito(id int, p domain.Carrito) error
+	DeleteCarrito(id int) error
+	ExistsByIDCarrito(id int) bool
+}
 
 /*type StoreInterfaceProductoImagen interface {
 	// Read devuelve un paciente por su id
@@ -58,3 +64,5 @@ type StoreInterfaceUsuarios interface {
 	// Delete elimina un paciente
 	DeleteProductoImagen(id int) error
 }*/
+
+

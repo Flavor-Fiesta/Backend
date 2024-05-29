@@ -26,7 +26,7 @@ func main() {
 	}*/
 
 	// Abrir una conexión temporal a MySQL para ejecutar comandos administrativos
-	db, err := sql.Open("mysql", "root:122481624@(localhost:3306)/FlavorFiesta")
+	db, err := sql.Open("mysql", "root:root@(localhost:3306)/FlavorFiesta")
 	if err != nil {
 		log.Fatal("Error al conectar con MySQL:", err)
 	}
@@ -45,7 +45,7 @@ func main() {
 	}
 
 	// Conectar a la base de datos 'FlavorFiesta'
-	bd, err := sql.Open("mysql", "root:122481624@(localhost:3306)/FlavorFiesta")
+	bd, err := sql.Open("mysql", "root:root@(localhost:3306)/FlavorFiesta")
 	if err != nil {
 		log.Fatal("Error al conectar con la base de datos 'FlavorFiesta':", err)
 	}
