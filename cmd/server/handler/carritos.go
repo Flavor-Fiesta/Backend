@@ -15,7 +15,6 @@ type carritoHandler struct {
 	s carritos.Service
 }
 
-// NewCarritoHandler crea un nuevo handler de carrito
 func NewCarritoHandler(s carritos.Service) *carritoHandler {
 	return &carritoHandler{
 		s: s,
@@ -43,6 +42,27 @@ func (h *carritoHandler) Post() gin.HandlerFunc {
 		c.JSON(200, createdCarrito)
 	}
 }
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE CARRITO POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+func (h *carritoHandler) GetCarritoByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idParam := c.Param("id")
+		id, err := strconv.Atoi(idParam)
+		if err != nil {
+			web.Failure(c, 400, errors.New("Invalid id"))
+			return
+		}
+		carrito, err := h.s.GetCarritoByID(id)
+		if err != nil {
+			fmt.Print("aca si")
+			web.Failure(c, 404, errors.New("No se encuentra"))
+			fmt.Print("aca no")
+			return
+		}
+		web.Success(c, 200, carrito)
+	}
+}
+
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA UN CARRITO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (h *carritoHandler) Put() gin.HandlerFunc {
@@ -74,7 +94,6 @@ func (h *carritoHandler) Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("TOKEN")
 		if token == "123456" {
-			// Permitir la eliminación del carrito con el token correcto
 			idParam := c.Param("id")
 			id, err := strconv.Atoi(idParam)
 			if err != nil {
@@ -86,10 +105,8 @@ func (h *carritoHandler) Delete() gin.HandlerFunc {
 				web.Failure(c, 404, err)
 				return
 			}
-			// Se elimina el carrito correctamente, enviar mensaje de éxito
 			c.JSON(200, gin.H{"message": "El carrito se elimino correctamente"})
 		} else {
-			// Token no válido
 			web.Failure(c, 401, errors.New("invalid token"))
 			return
 		}

@@ -30,7 +30,7 @@ func NewSqlStoreOrden(db *sql.DB) StoreInterfaceOrdenes {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR UNA NUEVA ORDEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStore) CrearOrden(orden domain.Orden) error {
-	query := "INSERT INTO ordenes (fecha_orden, total, estado) VALUES (?, ?, ?);"
+	query := "INSERT INTO ordenes (fechaOrden, total, estado) VALUES (?, ?, ?);"
 	stmt, err := s.db.Prepare(query)
 	if err != nil {
 		return fmt.Errorf("error preparing query: %w", err)
@@ -53,9 +53,9 @@ func (s *sqlStore) CrearOrden(orden domain.Orden) error {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  BUSCAR ORDEN POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStore) BuscarOrden(id int) (domain.Orden, error) {
 	var orden domain.Orden
-	query := "SELECT orden_id, fecha_orden, total, estado FROM ordenes WHERE orden_id = ?"
+	query := "SELECT id, fechaOrden, total, estado FROM ordenes WHERE id = ?"
 
-	err := s.db.QueryRow(query, id).Scan(&orden.OrdenID, &orden.FechaOrden, &orden.Total, &orden.Estado)
+	err := s.db.QueryRow(query, id).Scan(&orden.ID, &orden.FechaOrden, &orden.Total, &orden.Estado)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return domain.Orden{}, errors.New("orden not found")
@@ -68,7 +68,7 @@ func (s *sqlStore) BuscarOrden(id int) (domain.Orden, error) {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA UNA ORDEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStore) UpdateOrden(id int, orden domain.Orden) error {
-	query := "UPDATE ordenes SET fecha_orden = ?, total = ?, estado = ? WHERE orden_id = ?;"
+	query := "UPDATE ordenes SET fechaOrden = ?, total = ?, estado = ? WHERE id = ?;"
 
 	result, err := s.db.Exec(query, orden.FechaOrden, orden.Total, orden.Estado, id)
 	if err != nil {
@@ -104,7 +104,7 @@ func (s *sqlStore) PatchOrden(id int, updatedFields map[string]interface{}) erro
 			query += ","
 		}
 	}
-	query += " WHERE orden_id = ?"
+	query += " WHERE id = ?"
 	values = append(values, id)
 
 	stmt, err := s.db.Prepare(query)
@@ -123,7 +123,7 @@ func (s *sqlStore) PatchOrden(id int, updatedFields map[string]interface{}) erro
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>ELIMINAR UNA ORDEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStore) DeleteOrden(id int) error {
-	query := "DELETE FROM ordenes WHERE orden_id = ?;"
+	query := "DELETE FROM ordenes WHERE id = ?;"
 	stmt, err := s.db.Prepare(query)
 	if err != nil {
 		log.Fatal(err)
@@ -141,7 +141,7 @@ func (s *sqlStore) DeleteOrden(id int) error {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> VERIFICA SI EXISTE ORDEN CON ESE ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStore) ExistsByIDOrden(id int) bool {
-	query := "SELECT COUNT(*) FROM ordenes WHERE orden_id = ?"
+	query := "SELECT COUNT(*) FROM ordenes WHERE id = ?"
 	var count int
 	err := s.db.QueryRow(query, id).Scan(&count)
 	if err != nil {

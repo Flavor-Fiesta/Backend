@@ -10,6 +10,7 @@ import (
 
 type Repository interface {
 	CrearCarrito(p domain.Carrito) (domain.Carrito, error)
+	GetCarritoByID(id int) (domain.Carrito, error)
 	UpdateCarrito(id int, p domain.Carrito) (domain.Carrito, error)
 	DeleteCarrito(id int) error
 }
@@ -29,6 +30,13 @@ func (r *repository) CrearCarrito(p domain.Carrito) (domain.Carrito, error) {
 		return domain.Carrito{}, errors.New("error creating carrito")
 	}
 	return p, nil
+}
+func (r *repository) GetCarritoByID(id int) (domain.Carrito, error) {
+    carrito, err := r.storage.GetCarritoByID(id)
+    if err != nil {
+        return domain.Carrito{}, err
+    }
+    return carrito, nil
 }
 
 

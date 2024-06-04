@@ -7,6 +7,7 @@ import (
 )
 
 type Service interface {
+	GetCarritoByID(id int) (domain.Carrito, error)
 	CrearCarrito(p domain.Carrito) (domain.Carrito, error)
 	DeleteCarrito(id int) error
 	UpdateCarrito(id int, p domain.Carrito) (domain.Carrito, error)
@@ -24,6 +25,14 @@ func NewService(r Repository) Service {
 // CrearCarrito creates a new carrito
 func (s *service) CrearCarrito(p domain.Carrito) (domain.Carrito, error) {
 	p, err := s.r.CrearCarrito(p)
+	if err != nil {
+		return domain.Carrito{}, err
+	}
+	return p, nil
+}
+
+func (s *service) GetCarritoByID(id int) (domain.Carrito, error) {
+	p, err := s.r.GetCarritoByID(id)
 	if err != nil {
 		return domain.Carrito{}, err
 	}

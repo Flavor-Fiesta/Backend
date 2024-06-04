@@ -1,8 +1,8 @@
 package domain
 
 type Orden struct {
-    OrdenID    int       `json:"orden_id" db:"orden_id"`
-    FechaOrden string `json:"fecha_orden" db:"fecha_orden"`
+    ID    int       `json:"id"`
+    FechaOrden string `json:"fechaOrden" db:"fechaOrden"`
     Total      float64   `json:"total" db:"total"`
     Estado     string    `json:"estado" db:"estado"`
 }

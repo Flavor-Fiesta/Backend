@@ -47,6 +47,7 @@ type StoreInterfaceUsuarios interface {
 }
 type StoreInterfaceCarritos interface {
 
+	GetCarritoByID(id int) (domain.Carrito, error)
 	CrearCarrito(carrito domain.Carrito) error
 	UpdateCarrito(id int, p domain.Carrito) error
 	DeleteCarrito(id int) error

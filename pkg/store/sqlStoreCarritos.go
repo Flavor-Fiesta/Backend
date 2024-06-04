@@ -19,14 +19,14 @@ func NewSqlStoreCarrito(db *sql.DB) StoreInterfaceCarritos {
 }
 
 func (s *sqlStoreCarritos) CrearCarrito(carrito domain.Carrito) error {
-	query := "INSERT INTO carritos (UsuarioID, ProductoID, Total) VALUES (?, ?, ?);"
+	query := "INSERT INTO carrito (usuario_id, producto_id, Total) VALUES (?, ?, ?);"
 	stmt, err := s.db.Prepare(query)
 	if err != nil {
 		return fmt.Errorf("error preparing query: %w", err)
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(carrito.UsuarioID, carrito.ProductoID, carrito.Total)
+	res, err := stmt.Exec(carrito.Id_usuario, carrito.Id_producto, carrito.Total)
 	if err != nil {
 		return fmt.Errorf("error executing query: %w", err)
 	}
@@ -39,13 +39,22 @@ func (s *sqlStoreCarritos) CrearCarrito(carrito domain.Carrito) error {
 	return nil
 }
 
+func (s *sqlStoreCarritos) GetCarritoByID(id int) (domain.Carrito, error) {
+    var carrito domain.Carrito
+    query := "SELECT id, usuario_id, producto_id, total FROM carrito WHERE id = ?;"
+    err := s.db.QueryRow(query, id).Scan(&carrito.ID, &carrito.Id_usuario, &carrito.Id_producto, &carrito.Total)
+    if err != nil {
+        return domain.Carrito{}, err
+    }
+    return carrito, nil
+}
 
 
 // UpdateCarrito updates an existing carrito
-func (s *sqlStoreCarritos) UpdateCarrito(id int, p domain.Carrito) error {
-	query := "UPDATE carritos SET UsuarioID = ?, ProductoID = ?, Total = ? WHERE CarritoID = ?;"
+func (s *sqlStoreCarritos) UpdateCarrito(id int, carrito domain.Carrito) error {
+	query := "UPDATE carrito SET usuario_id = ?, producto_id = ?, Total = ? WHERE id = ?;"
 
-	result, err := s.db.Exec(query, p.UsuarioID, p.ProductoID, p.Total, id)
+	result, err := s.db.Exec(query, carrito.Id_usuario, carrito.Id_producto, carrito.Total, id)
 	if err != nil {
 		return err
 	}
@@ -64,7 +73,7 @@ func (s *sqlStoreCarritos) UpdateCarrito(id int, p domain.Carrito) error {
 
 // DeleteCarrito deletes a carrito by ID
 func (s *sqlStoreCarritos) DeleteCarrito(id int) error {
-	query := "DELETE FROM carritos WHERE CarritoID = ?;"
+	query := "DELETE FROM carrito WHERE id = ?;"
 	stmt, err := s.db.Prepare(query)
 	if err != nil {
 		log.Fatal(err)
@@ -81,7 +90,7 @@ func (s *sqlStoreCarritos) DeleteCarrito(id int) error {
 }
 
 func (s *sqlStoreCarritos) ExistsByIDCarrito(id int) bool {
-	query := "SELECT COUNT(*) FROM carritos WHERE CarritoID = ?"
+	query := "SELECT COUNT(*) FROM carrito WHERE id = ?"
 	var count int
 	err := s.db.QueryRow(query, id).Scan(&count)
 	if err != nil {

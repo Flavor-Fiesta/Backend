@@ -7,9 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jfcheca/FlavorFiesta/cmd/server/handler"
+	"github.com/jfcheca/FlavorFiesta/internal/carritos"
 	"github.com/jfcheca/FlavorFiesta/internal/imagenes"
 	"github.com/jfcheca/FlavorFiesta/internal/productos"
 	"github.com/jfcheca/FlavorFiesta/internal/usuarios"
+	"github.com/jfcheca/FlavorFiesta/internal/ordenes"
 	"github.com/jfcheca/FlavorFiesta/pkg/store"
 
 	//	"github.com/jfcheca/Checa_Budai_FinalBack3/internal/domain"
@@ -19,11 +21,11 @@ import (
 )
 
 func main() {
-/*	// Cargar variables de entorno desde el archivo .env
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error al cargar el archivo .env:", err)
-	}*/
+	/*	// Cargar variables de entorno desde el archivo .env
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatal("Error al cargar el archivo .env:", err)
+		}*/
 
 	// Abrir una conexión temporal a MySQL para ejecutar comandos administrativos
 	db, err := sql.Open("mysql", "root:root@(localhost:3306)/FlavorFiesta")
@@ -73,18 +75,17 @@ func main() {
 			log.Fatal("Error al ejecutar la sentencia SQL:", err)
 		}
 	}
-	
+
 	// Configurar el enrutador Gin
 	r := gin.Default()
-	
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>PRODUCTOS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>PRODUCTOS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	// Crear el almacenamiento SQL con la base de datos 'FlavorFiesta'
 	storage := store.NewSqlStoreProductos(bd)
 	repo := productos.NewRepository(storage)
 	service := productos.NewService(repo)
 	productoHandler := handler.NewProductHandler(service)
-
 
 	// Rutas para el manejo de productos
 	productos := r.Group("/productos")
@@ -97,8 +98,7 @@ func main() {
 		productos.PUT("/:id", productoHandler.Put())
 	}
 
-
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>IMAGENES>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>IMAGENES>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	// Crear el almacenamiento SQL con la base de datos 'FlavorFiesta'
 	storageImagen := store.NewSqlStoreImagen(bd)
@@ -116,7 +116,7 @@ func main() {
 		imagenes.PUT("/:id", imagenHandler.Put())
 	}
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>USUARIOS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>USUARIOS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	// Crear el almacenamiento SQL con la base de datos 'FlavorFiesta'
 	storageUsuario := store.NewSqlStoreUsuarios(bd)
@@ -135,21 +135,55 @@ func main() {
 		usuarios.PUT("/:id", usuariosHandler.Put())
 	}
 
-/*
-	storageProductoImagen := store.NewSqlStoreProductoImagen(bd)
-	repoProductoImagen := productoImagen.NewRepositoryProductoImagen(storageProductoImagen)
-	ServiceProductoImagen:= productoImagen.NewServiceProductoImagen(repoProductoImagen)
-	productoImagenHandler := handler.NewProductoImagenHandler(ServiceProductoImagen)
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>CARRITOS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-	productoImagen := r.Group("/productoImagen")
+	// Crear el almacenamiento SQL con la base de datos 'FlavorFiesta'
+	storageCarrito := store.NewSqlStoreCarrito(bd)
+	repoCarrito := carritos.NewRepository(storageCarrito)
+	serviceCarrito := carritos.NewService(repoCarrito)
+	carritoHandler := handler.NewCarritoHandler(serviceCarrito)
+
+	// Rutas para el manejo de carritos
+	carritos := r.Group("/carritos")
 	{
-		productoImagen.GET("/:id", productoImagenHandler.BuscarProductoImagen())
-		productoImagen.POST("/crear", productoImagenHandler.CrearProductoImagen())
-		productoImagen.DELETE("/:id", productoImagenHandler.DeleteProductoImagen())
-    //	pacientes.PATCH("/:id", pacienHandler.PatchPaciente())
-	productoImagen.PUT("/:id", productoImagenHandler.UpdateProductoImagen())
+		carritos.GET("/:id", carritoHandler.GetCarritoByID())
+		carritos.POST("/crear", carritoHandler.Post())
+		carritos.PUT("/:id", carritoHandler.Put())
+		carritos.DELETE("/:id", carritoHandler.Delete())
 	}
-*/
+
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>ORDENES>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	// Crear el almacenamiento SQL con la base de datos 'FlavorFiesta'
+	storageOrden := store.NewSqlStoreOrden(bd)
+	repoOrden := orden.NewRepository(storageOrden)
+	serviceOrden := orden.NewService(repoOrden)
+	ordenHandler := handler.NewOrdenHandler(serviceOrden)
+
+	// Rutas para el manejo de órdenes
+	ordenes := r.Group("/ordenes")
+	{
+		ordenes.GET("/:id", ordenHandler.GetOrdenByID())
+		ordenes.POST("/crear", ordenHandler.Post())
+		ordenes.PUT("/:id", ordenHandler.Put())
+		ordenes.DELETE("/:id", ordenHandler.Delete())
+	}
+
+	/*
+	   	storageProductoImagen := store.NewSqlStoreProductoImagen(bd)
+	   	repoProductoImagen := productoImagen.NewRepositoryProductoImagen(storageProductoImagen)
+	   	ServiceProductoImagen:= productoImagen.NewServiceProductoImagen(repoProductoImagen)
+	   	productoImagenHandler := handler.NewProductoImagenHandler(ServiceProductoImagen)
+
+	   	productoImagen := r.Group("/productoImagen")
+	   	{
+	   		productoImagen.GET("/:id", productoImagenHandler.BuscarProductoImagen())
+	   		productoImagen.POST("/crear", productoImagenHandler.CrearProductoImagen())
+	   		productoImagen.DELETE("/:id", productoImagenHandler.DeleteProductoImagen())
+	       //	pacientes.PATCH("/:id", pacienHandler.PatchPaciente())
+	   	productoImagen.PUT("/:id", productoImagenHandler.UpdateProductoImagen())
+	   	}
+	*/
 	// Ejecutar el servidor en el puerto 8080
 	r.Run(":8080")
 }
