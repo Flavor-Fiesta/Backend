@@ -55,10 +55,10 @@ CREATE TABLE IF NOT EXISTS carrito (
 
 CREATE TABLE IF NOT EXISTS carritosorden (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  carrito_id INT NOT NULL,
-  orden_id INT NOT NULL,
+  id_carrito INT NOT NULL,
+  id_orden INT NOT NULL,
   Cantidad INT NOT NULL,
   PrecioUnitario DECIMAL(10,2) NOT NULL,
-  FOREIGN KEY (orden_id) REFERENCES ordenes(id),
-  FOREIGN KEY (carrito_id) REFERENCES carrito(id)
+  FOREIGN KEY (id_orden) REFERENCES ordenes(id),
+  FOREIGN KEY (id_carrito) REFERENCES carrito(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

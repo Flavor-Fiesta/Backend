@@ -54,6 +54,18 @@ type StoreInterfaceCarritos interface {
 	ExistsByIDCarrito(id int) bool
 }
 
+type StoreInterfaceCarritoOrdenes interface {
+
+	GetCarritoOrdenesByID(id int) (domain.CarritosOrden, error)
+	CrearCarritoOrdenes(carrito domain.CarritosOrden) error
+	UpdateCarritoOrdenes(id int, p domain.CarritosOrden) error
+	DeleteCarritoOrdenes(id int) error
+	ExistsByIDCarritoOrdenes(id int) bool
+}
+
+
+
+
 /*type StoreInterfaceProductoImagen interface {
 	// Read devuelve un paciente por su id
 	BuscarProductoImagen(id int) (domain.ProductoImagen, error)

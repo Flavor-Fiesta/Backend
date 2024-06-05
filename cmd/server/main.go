@@ -12,6 +12,7 @@ import (
 	"github.com/jfcheca/FlavorFiesta/internal/productos"
 	"github.com/jfcheca/FlavorFiesta/internal/usuarios"
 	"github.com/jfcheca/FlavorFiesta/internal/ordenes"
+	"github.com/jfcheca/FlavorFiesta/internal/carritoOrdenes"
 	"github.com/jfcheca/FlavorFiesta/pkg/store"
 
 	//	"github.com/jfcheca/Checa_Budai_FinalBack3/internal/domain"
@@ -167,6 +168,23 @@ func main() {
 		ordenes.POST("/crear", ordenHandler.Post())
 		ordenes.PUT("/:id", ordenHandler.Put())
 		ordenes.DELETE("/:id", ordenHandler.Delete())
+	}
+
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CARRITO ORDENES >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	// Crear el almacenamiento SQL con la base de datos 'FlavorFiesta'
+	storageCarritoOrden := store.NewSqlStoreCarritoOrdenes(bd)
+	repoCarritoOrden := carritoOrdenes.NewRepository(storageCarritoOrden)
+	serviceCarritoOrden := carritoOrdenes.NewService(repoCarritoOrden)
+	carritoOrdenesHandler := handler.NewCarritoOrdenesHandler(serviceCarritoOrden)
+
+	// Rutas para el manejo de carritoOrdenes
+	carritoOrdenes := r.Group("/carritoOrdenes")
+	{
+		carritoOrdenes.GET("/:id", carritoOrdenesHandler.GetCarritoOrdenesByID())
+		carritoOrdenes.POST("/crear", carritoOrdenesHandler.Post())
+		carritoOrdenes.PUT("/:id", carritoOrdenesHandler.Put())
+		carritoOrdenes.DELETE("/:id", carritoOrdenesHandler.Delete())
 	}
 
 	/*

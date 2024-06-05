@@ -1,8 +1,9 @@
 package domain
 
 type CarritosOrden struct {
-    OrdenID       int     `json:"orden_id" db:"orden_id"`
-    CarritoID     int     `json:"carrito_id" db:"carrito_id"`
-    Cantidad      int     `json:"cantidad" db:"cantidad"`
-    PrecioUnitario float64 `json:"precio_unitario" db:"precio_unitario"`
+	ID             int     `json:"id" `
+	Id_carrito     int     `json:"id_carrito" `
+	Id_orden       int     `json:"id_orden" `
+	Cantidad       int     `json:"cantidad" `
+	PrecioUnitario float64 `json:"precioUnitario" `
 }
