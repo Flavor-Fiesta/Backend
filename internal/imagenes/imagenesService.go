@@ -9,9 +9,10 @@ import (
 type Service interface {
 
 	BuscarImagen(id int) (domain.Imagen, error)
-	CrearImagen(p domain.Imagen) (domain.Imagen, error)
+	CrearImagenes(imagenes []domain.Imagen) error
 	DeleteImagen(id int) error
 	UpdateImagen(id int, p domain.Imagen) (domain.Imagen, error)
+
 	
 }
 
@@ -27,14 +28,13 @@ func NewService(r Repository) Service {
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR UN NUEVO IMAGEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-func (s *service) CrearImagen(p domain.Imagen) (domain.Imagen, error) {
-	p, err := s.r.CrearImagen(p)
-	if err != nil {
-		return domain.Imagen{}, err
-	}
-	return p, nil
+func (s *service) CrearImagenes(imagenes []domain.Imagen) error {
+    err := s.r.CrearImagenes(imagenes)
+    if err != nil {
+        return err
+    }
+    return nil
 }
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE IMAGEN POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *service) BuscarImagen(id int) (domain.Imagen, error) {
 	p, err := s.r.BuscarImagen(id)

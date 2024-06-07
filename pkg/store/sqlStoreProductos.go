@@ -20,90 +20,215 @@ func NewSqlStoreProductos(db *sql.DB) StoreInterfaceProducto {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR UN NUEVO PRODUCTO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStoreProductos) CrearProducto(producto domain.Producto) error {
-    query := "INSERT INTO productos (nombre, codigo, categoria, fecha_alta, fecha_vencimiento) VALUES (?, ?, ?, ?, ?);"
-    stmt, err := s.db.Prepare(query)
+	query := "INSERT INTO productos (id_categoria, nombre, descripcion, precio, stock, ranking) VALUES (?, ?, ?, ?, ?, ?);"
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("error preparing query: %w", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(producto.Id_categoria, producto.Nombre, producto.Descripcion, producto.Precio, producto.Stock, producto.Ranking)
+	if err != nil {
+		return fmt.Errorf("error executing query: %w", err)
+	}
+
+	return nil
+}
+
+func (s *sqlStoreProductos) ObtenerNombreCategoria(idCategoria int) (string, error) {
+	var nombreCategoria string
+	query := "SELECT nombre FROM categorias WHERE id = ?"
+	err := s.db.QueryRow(query, idCategoria).Scan(&nombreCategoria)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", errors.New("categoria not found")
+		}
+		return "", fmt.Errorf("error fetching category name: %w", err)
+	}
+	return nombreCategoria, nil
+}
+/*func (s *sqlStoreProductos) CrearProducto(producto domain.Producto) error {
+    query := "INSERT INTO productos (id_categoria, nombre, descripcion, precio, stock, ranking) VALUES (?, ?, ?, ?, ?, ?);"
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("error preparing query: %w", err)
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(producto.Id_categoria, producto.Nombre, producto.Descripcion, producto.Precio, producto.Stock, producto.Ranking)
+	if err != nil {
+		return fmt.Errorf("error executing query: %w", err)
+	}
+
+	_, err = res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error fetching rows affected: %w", err)
+	}
+
+	return nil
+}
+*/
+/*    stmt, err := s.db.Prepare(query)
     if err != nil {
         return fmt.Errorf("error al preparar la consulta SQL: %w", err)
     }
     defer stmt.Close()
 
-    result, err := stmt.Exec(producto.Nombre, producto.Codigo, producto.Categoria, producto.FechaDeAlta, producto.FechaDeVencimiento)
+    result, err := stmt.Exec(producto.Id_categoria, producto.Nombre, producto.Descripcion, producto.Precio, producto.Stock, producto.Ranking)
     if err != nil {
         return fmt.Errorf("error al ejecutar la consulta SQL para insertar producto: %w", err)
     }
+    
+    // Obtener el número de filas afectadas
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        return fmt.Errorf("error al obtener el número de filas afectadas: %w", err)
+    }
+    if rowsAffected != 1 {
+        return fmt.Errorf("se esperaba que se afectara una fila, pero se afectaron %d filas", rowsAffected)
+    }
 
+    // Obtener el ID del producto insertado
     productoID, err := result.LastInsertId()
     if err != nil {
         return fmt.Errorf("error al obtener el ID del producto insertado: %w", err)
     }
 
-    // Insertar imágenes asociadas al producto
-    for _, imagen := range producto.Imagenes {
-        query := "INSERT INTO imagenes (producto_id, titulo, url) VALUES (?, ?, ?);"
-        stmt, err := s.db.Prepare(query)
-        if err != nil {
-            return fmt.Errorf("error al preparar la consulta SQL para insertar imagen: %w", err)
-        }
-        defer stmt.Close()
+    // Asignar el ID del producto
+    producto.ID = int(productoID)
 
-        _, err = stmt.Exec(productoID, imagen.Titulo, imagen.Url)
-        if err != nil {
-            return fmt.Errorf("error al ejecutar la consulta SQL para insertar imagen: %w", err)
-        }
+    // Consultar el nombre de la categoría
+    var categoriaNombre string
+    err = s.db.QueryRow("SELECT nombre FROM categorias WHERE id = ?", producto.Id_categoria).Scan(&categoriaNombre)
+    if err != nil {
+        return fmt.Errorf("error al obtener el nombre de la categoría: %w", err)
     }
 
     return nil
-}
+}*/
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  BUSCAR PRODUCTO POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStoreProductos) BuscarProducto(id int) (domain.Producto, error) {
-	var producto domain.Producto
-	query := "SELECT id, nombre, codigo, categoria, fecha_alta, fecha_vencimiento FROM productos WHERE id = ?"
+    var producto domain.Producto
 
-	err := s.db.QueryRow(query, id).Scan(&producto.ID, &producto.Nombre, &producto.Codigo, &producto.Categoria, &producto.FechaDeAlta, &producto.FechaDeVencimiento)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return domain.Producto{}, errors.New("producto not found")
-		}
-		return domain.Producto{}, err
-	}
+    // Consulta principal del producto
+    query := `SELECT id, id_categoria, nombre, descripcion, precio, stock, ranking
+              FROM productos WHERE id = ?`
+
+    err := s.db.QueryRow(query, id).Scan(
+        &producto.ID,
+        &producto.Id_categoria,
+        &producto.Nombre,
+        &producto.Descripcion,
+        &producto.Precio,
+        &producto.Stock,
+        &producto.Ranking,
+    )
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return domain.Producto{}, errors.New("producto not found")
+        }
+        return domain.Producto{}, err
+    }
+
+    // Consulta de la categoría del producto
+    if producto.Id_categoria != 0 {
+        categoriaQuery := `SELECT nombre FROM categorias WHERE id = ?`
+        var categoria string
+        err = s.db.QueryRow(categoriaQuery, producto.Id_categoria).Scan(&categoria)
+        if err != nil {
+            return domain.Producto{}, err
+        }
+        producto.Categoria = categoria // Asignar la categoría al producto
+    }
+
+    // Inicializar la lista de imágenes
+    producto.Imagenes = []domain.Imagen{}
+
+    // Consulta de las imágenes del producto
+    imagenesQuery := `SELECT id, id_producto, titulo, url FROM imagenes WHERE id_producto = ?`
+    rows, err := s.db.Query(imagenesQuery, producto.ID)
+    if err != nil {
+        return domain.Producto{}, err
+    }
+    defer rows.Close()
+
+    for rows.Next() {
+        var imagen domain.Imagen
+        if err := rows.Scan(&imagen.ID, &imagen.Id_producto, &imagen.Titulo, &imagen.Url); err != nil {
+            return domain.Producto{}, err
+        }
+        producto.Imagenes = append(producto.Imagenes, imagen)
+    }
+
     return producto, nil
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  BUSCAR TODOS LOS PRODUCTOS<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 func (s *sqlStoreProductos) BuscarTodosLosProductos() ([]domain.Producto, error) {
-	var productos []domain.Producto
-	query := "SELECT id, nombre, codigo, categoria, fecha_alta, fecha_vencimiento FROM productos"
+    var productos []domain.Producto
+    query := `
+        SELECT 
+            p.id, p.nombre, p.descripcion, c.nombre as categoria, p.precio, p.stock, p.ranking 
+        FROM 
+            productos p
+        LEFT JOIN 
+            categorias c ON p.id_categoria = c.id
+    `
 
-	rows, err := s.db.Query(query)
-	if err != nil {
-		return nil, fmt.Errorf("error querying usuarios: %w", err)
-	}
-	defer rows.Close()
+    rows, err := s.db.Query(query)
+    if err != nil {
+        return nil, fmt.Errorf("error querying productos: %w", err)
+    }
+    defer rows.Close()
 
-	for rows.Next() {
-		var producto domain.Producto
-		if err := rows.Scan(&producto.ID, &producto.Nombre, &producto.Codigo, &producto.Categoria, &producto.FechaDeAlta, &producto.FechaDeVencimiento); err != nil {
-			return nil, fmt.Errorf("error scanning producto: %w", err)
-		}
-		productos = append(productos, producto)
-	}
+    for rows.Next() {
+        var producto domain.Producto
+        var categoriaNombre string // Variable adicional para la categoría
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
-	}
+        if err := rows.Scan(&producto.ID, &producto.Nombre, &producto.Descripcion, &categoriaNombre, &producto.Precio, &producto.Stock, &producto.Ranking); err != nil {
+            return nil, fmt.Errorf("error scanning producto: %w", err)
+        }
 
-	return productos, nil
+        producto.Categoria = categoriaNombre // Asignar la categoría al producto
+
+        // Obtener las imágenes del producto
+        imagenesQuery := "SELECT id, id_producto, titulo, url FROM imagenes WHERE id_producto = ?"
+        imagenesRows, err := s.db.Query(imagenesQuery, producto.ID)
+        if err != nil {
+            return nil, err
+        }
+        defer imagenesRows.Close()
+
+        for imagenesRows.Next() {
+            var imagen domain.Imagen
+            if err := imagenesRows.Scan(&imagen.ID, &imagen.Id_producto, &imagen.Titulo, &imagen.Url); err != nil {
+                return nil, err
+            }
+            producto.Imagenes = append(producto.Imagenes, imagen)
+        }
+
+        productos = append(productos, producto)
+    }
+
+    if err := rows.Err(); err != nil { // Asegúrate de que esta condición esté evaluando un booleano
+        return nil, fmt.Errorf("error iterating rows: %w", err)
+    }
+
+    return productos, nil
 }
 
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA UN PRODUCTO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStoreProductos) UpdateProducto(id int, p domain.Producto) error {
 	// Preparar la consulta SQL para actualizar el producto
-	query := "UPDATE productos SET nombre = ?, codigo = ?, categoria = ?, fecha_alta = ?, fecha_vencimiento = ? WHERE id = ?;"
+	query := "UPDATE productos SET nombre = ?, descripcion = ?, categoria = ?, fecha_alta = ?, fecha_vencimiento = ? WHERE id = ?;"
 
 	// Ejecutar la consulta SQL
-	result, err := s.db.Exec(query, p.Nombre, p.Codigo, p.Categoria, p.FechaDeAlta, p.FechaDeVencimiento, id)
+	result, err := s.db.Exec(query, p.Nombre, p.Descripcion, p.Precio, p.Stock,p.Ranking, id)
 	if err != nil {
 		return err // Devolver el error si ocurre alguno al ejecutar la consulta
 	}
@@ -114,7 +239,7 @@ func (s *sqlStoreProductos) UpdateProducto(id int, p domain.Producto) error {
 	}
 	// Si no se actualizó ningún registro, significa que el odontólogo con el ID dado no existe
 	if rowsAffected == 0 {
-		return fmt.Errorf("Odontologo con ID %d no encontrado", id)
+		return fmt.Errorf("Producto con ID %d no encontrado", id)
 	}
 	// Si todo fue exitoso, retornar nil
 	return nil
@@ -122,10 +247,10 @@ func (s *sqlStoreProductos) UpdateProducto(id int, p domain.Producto) error {
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PATCH PRODUCTO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-func (s *sqlStoreProductos) Patch(id int, updatedFields map[string]interface{}) error {
+func (s *sqlStoreProductos) Patch(id int, updatedFields map[string]interface{}) (domain.Producto, error) {
     // Comprobar si se proporcionan campos para actualizar
     if len(updatedFields) == 0 {
-        return errors.New("no fields provided for patching")
+        return domain.Producto{}, errors.New("no fields provided for patching")
     }
 
     // Construir la consulta SQL para actualizar los campos
@@ -146,16 +271,21 @@ func (s *sqlStoreProductos) Patch(id int, updatedFields map[string]interface{}) 
     // Preparar y ejecutar la consulta SQL
     stmt, err := s.db.Prepare(query)
     if err != nil {
-        return err
+        return domain.Producto{}, err
     }
     defer stmt.Close()
 
     _, err = stmt.Exec(values...)
     if err != nil {
-        return err
+        return domain.Producto{}, err
     }
 
-    return nil
+    // Si la actualización fue exitosa, puedes devolver el producto actualizado
+    // Sin embargo, en este caso, como la actualización podría haber afectado a múltiples registros,
+    // No tienes una representación directa del producto actualizado.
+    // Puedes optar por devolver un producto vacío o uno con el ID correspondiente.
+    // Aquí devolveré un producto vacío.
+    return domain.Producto{}, nil
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>ELIMINAR UN PRODUCTO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStoreProductos) DeleteProducto(id int) error {

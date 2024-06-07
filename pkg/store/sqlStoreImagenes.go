@@ -19,50 +19,23 @@ func NewSqlStoreImagen(db *sql.DB) StoreInterfaceImagenes {
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR UNA NUEVA IMAGEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-func (s *sqlStore) CrearImagen(imagen domain.Imagen) error {
-	query := "INSERT INTO imagenes (id_producto, titulo, url) VALUES (?, ?, ?);"
-	stmt, err := s.db.Prepare(query)
-	if err != nil {
-		return fmt.Errorf("error preparing query: %w", err)
-	}
-	defer stmt.Close()
-
-	res, err := stmt.Exec(imagen.Id_producto, imagen.Titulo, imagen.Url)
-	if err != nil {
-		return fmt.Errorf("error executing query: %w", err)
-	}
-
-	_, err = res.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("error fetching rows affected: %w", err)
-	}
-
-	return nil
-}
-func (s *sqlStore) ExisteProductoParaImagen(id int) (bool, error) {
-    // Consulta SQL para buscar un producto por su ID
-    query := "SELECT id FROM productos WHERE id = ?"
-
-    // Ejecutar la consulta SQL y escanear el resultado en una variable id
-    var count int
-    err := s.db.QueryRow(query, id).Scan(&count)
+func (s *sqlStore) CrearImagenes(imagenes []domain.Imagen) error {
+    query := "INSERT INTO imagenes (id_producto, titulo, url) VALUES (?, ?, ?);"
+    stmt, err := s.db.Prepare(query)
     if err != nil {
-        // Si se produce un error, verificamos si se trata de un error de "ninguna fila encontrada"
-        if err == sql.ErrNoRows {
-            // No se encontró ninguna fila, por lo que el producto no existe
-            return false, nil
-			fmt.Print(" REVISANDO EN SQL STORE:  ", query, count )
+        return fmt.Errorf("error preparing query: %w", err)
+    }
+    defer stmt.Close()
+
+    for _, imagen := range imagenes {
+        _, err := stmt.Exec(imagen.Id_producto, imagen.Titulo, imagen.Url)
+        if err != nil {
+            return fmt.Errorf("error executing query for image %v: %w", imagen, err)
         }
-        // Otro tipo de error, devolver el error
-        return false, err
     }
 
-    // Si se encontró un producto con el ID dado, devolver true
-    return true, nil
+    return nil
 }
-
-
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  BUSCAR IMAGEN POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStore) BuscarImagen(id int) (domain.Imagen, error) {
 	var imagen domain.Imagen
@@ -81,11 +54,11 @@ func (s *sqlStore) BuscarImagen(id int) (domain.Imagen, error) {
 
 func (s *sqlStore) BuscarProductoPorID(id int) (domain.Producto, error) {
     // Preparar la consulta SQL para buscar un producto por su ID
-    query := "SELECT id, nombre, codigo, categoria, fecha_alta, fecha_vencimiento FROM productos WHERE id = ?"
+    query := "SELECT id, nombre, descripcion, categoria, precio, stock, ranking FROM productos WHERE id = ?"
     
     // Ejecutar la consulta SQL y obtener el resultado
     var producto domain.Producto
-    err := s.db.QueryRow(query, id).Scan(&producto.ID, &producto.Nombre, &producto.Codigo, &producto.Categoria, &producto.FechaDeAlta, &producto.FechaDeVencimiento)
+    err := s.db.QueryRow(query, id).Scan(&producto.ID, &producto.Nombre, &producto.Descripcion, &producto.Precio, &producto.Stock, &producto.Ranking)
     if err != nil {
         // Manejar el error, por ejemplo, devolver un error específico si no se encuentra el producto
         if err == sql.ErrNoRows {

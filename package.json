@@ -1,0 +1,11 @@
+{
+  "name": "tu-proyecto",
+  "version": "1.0.0",
+  "dependencies": {
+    "vercel": "^34.2.4"
+  },
+  "scripts": {
+    "start": "go run main.go",
+    "build": "go build -o server"
+  }
+}

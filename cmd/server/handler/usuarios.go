@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -28,28 +29,27 @@ var ultimoUsuarioID int = 1
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREA NUEVA USUARIO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (h *usuariosHandler) Post() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var usuario domain.Usuarios
-		usuario.ID = ultimoUsuarioID
-		ultimoUsuarioID++
-		err := c.ShouldBindJSON(&usuario)
-		if err != nil {
-			web.Failure(c, 400, errors.New("invalid json: " + err.Error()))
-			fmt.Println("Error al hacer bind del JSON:", err)
-			return
-		}
+    return func(c *gin.Context) {
+        var usuario domain.Usuarios
+        usuario.ID = ultimoUsuarioID
+        ultimoUsuarioID++
+        err := c.ShouldBindJSON(&usuario)
+        if err != nil {
+            web.Failure(c, 400, errors.New("invalid json: " + err.Error()))
+            fmt.Println("Error al hacer bind del JSON:", err)
+            return
+        }
 
-		// Crear el producto utilizando el servicio
-		createdUsuario, err := h.s.CrearUsuario(usuario)
-		if err != nil {
-			web.Failure(c, 500, errors.New("failed to create producto"))
-			return
-		}
-		// Devolver el producto creado con su ID asignado a la base de datos
-		c.JSON(200, createdUsuario)
-
-	}
-
+        // Crear el usuario utilizando el servicio
+        createdUsuario, err := h.s.CrearUsuario(usuario)
+        if err != nil {
+            log.Printf("Error creating user: %v", err)
+            web.Failure(c, 500, errors.New("Fallo la creacion de usuario, revise que los datos ingresados sean correctivos"))
+            return
+        }
+        // Devolver el usuario creado con su ID asignado a la base de datos
+        c.JSON(200, createdUsuario)
+    }
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE USUARIO POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -63,17 +63,106 @@ func (h *usuariosHandler) GetByID() gin.HandlerFunc {
 		}
 		usuario, err := h.s.BuscarUsuario(id)
 		if err != nil {
-			fmt.Print("aca si")
 			web.Failure(c, 404, errors.New("No se encuentra"))
-			fmt.Print("aca no")
 			return
 		}
 		web.Success(c, 200, usuario)
 	}
 }
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE TODOS LOS URUARIOS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+func (h *usuariosHandler) GetByEmailAndPassword() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        email := c.Query("email")
+        password := c.Query("password")
 
+        if email == "" || password == "" {
+            web.Failure(c, 400, errors.New("Email and password are required"))
+            return
+        }
+
+        exists, err := h.s.BuscarUsuarioPorEmailYPassword(email, password)
+        if err != nil {
+            web.Failure(c, 404, errors.New("User not found"))
+            return
+        }
+
+        if exists {
+            c.JSON(200, gin.H{
+                "success": true,
+                "message": "Usuario encontrado",
+            })
+        } else {
+            c.JSON(200, gin.H{
+                "success": false,
+                "message": "Usuario no encontrado",
+            })
+        }
+    }
+}
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE USUARIO POR EMAIL Y CLAVE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+func (h *usuariosHandler) GetByEmailAndPasswordConDatos() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        email := c.Query("email")
+        password := c.Query("password")
+
+        if email == "" || password == "" {
+            web.Failure(c, 400, errors.New("Email and password are required"))
+            return
+        }
+
+        exists, err, usuario := h.s.BuscarUsuarioPorEmailYPassword3(email, password)
+        if err != nil {
+            if err.Error() == "usuario not found" {
+                web.Failure(c, 404, errors.New("User not found"))
+            } else {
+                web.Failure(c, 500, errors.New("Error retrieving user details"))
+            }
+            return
+        }
+
+        if exists {
+            c.JSON(200, gin.H{
+                "success": true,
+                "message": "Usuario encontrado",
+                "usuario": usuario,
+            })
+        } else {
+            c.JSON(200, gin.H{
+                "success": false,
+                "message": "Usuario no encontrado",
+            })
+        }
+    }
+}
+
+
+/*func (h *usuariosHandler) GetByEmailAndPassword2() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        email := c.Query("email")
+        password := c.Query("password")
+
+        if email == "" || password == "" {
+            web.Failure(c, 400, errors.New("Email and password are required"))
+            return
+        }
+
+        usuario, err := h.s.BuscarUsuarioPorEmailYPassword2(email, password)
+        if err != nil {
+            web.Failure(c, 404, errors.New("No se encuentra"))
+            return
+        }
+
+        
+
+        web.Success(c, 200, usuario)
+    }
+}*/
+
+
+
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE TODOS LOS URUARIOS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (h *usuariosHandler) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		usuarios, err := h.s.BuscarTodosLosUsuarios()
@@ -85,32 +174,77 @@ func (h *usuariosHandler) GetAll() gin.HandlerFunc {
 	}
 }
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA IMAGEN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-func (h *usuariosHandler) Put() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		idString := c.Param("id")
-		id, err := strconv.Atoi(idString)
-		if err != nil {
-			c.JSON(400, gin.H{"error": "invalid id"})
-			return
-		}
-		var usuario domain.Usuarios
-		err = c.ShouldBindJSON(&usuario)
-		if err != nil {
-			c.JSON(400, gin.H{"error": "invalid json"})
-			return
-		}
-		updatedImagen, err := h.s.UpdateUsuario(id, usuario)
-		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-		// Devolver solo la imagen actualizado
-		c.JSON(200, updatedImagen) // Asegúrate de que updatedImagen tenga el ID correcto
-	}
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ELIMINAR UN USUARIO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+func (h *usuariosHandler) DeleteUsuario() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        token := c.GetHeader("TOKEN")
+        if token == "123456" {
+            // Permitir la eliminación del usuario con el token correcto
+            idParam := c.Param("id")
+            id, err := strconv.Atoi(idParam)
+            if err != nil {
+                web.Failure(c, 400, errors.New("invalid id"))
+                return
+            }
+            
+            // Verificar si el usuario existe antes de intentar eliminarlo
+            _, err = h.s.BuscarUsuario(id)
+            if err != nil {
+                web.Failure(c, 404, errors.New("El usuario no existe"))
+                return
+            }
+
+            // Intentar eliminar el usuario
+            err = h.s.DeleteUsuario(id)
+            if err != nil {
+                web.Failure(c, 500, err)
+                return
+            }
+
+            // Usuario eliminado correctamente, enviar mensaje de éxito
+            c.JSON(200, gin.H{"message": "El usuario se eliminó correctamente"})
+        } else {
+            // Token no válido
+            web.Failure(c, 401, errors.New("invalid token"))
+            return
+        }
+    }
 }
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PATCH ACTUALIZA UNA IMAGEN O ALGUNO DE SUS CAMPOS <<<<<<<<<<<<<<<<<<<<<<<<<<
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA UN USUARIO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+func (h *usuariosHandler) Put() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        idParam := c.Param("id")
+        id, err := strconv.Atoi(idParam)
+        if err != nil {
+            web.Failure(c, 400, errors.New("invalid id"))
+            return
+        }
+        
+        _, err = h.s.BuscarUsuario(id)
+        if err != nil {
+            web.Failure(c, 404, errors.New("user not found"))
+            return
+        }
+        
+        var usuario domain.Usuarios
+        err = c.ShouldBindJSON(&usuario)
+        if err != nil {
+            web.Failure(c, 400, errors.New("invalid json"))
+            return
+        }
+        
+        updatedUsuario, err := h.s.Update(id, usuario)
+        if err != nil {
+            web.Failure(c, 500, errors.New("could not update user"))
+            return
+        }
+        
+        web.Success(c, 200, updatedUsuario)
+    }
+}
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PATCH ACTUALIZA UN USUARIO O ALGUNO DE SUS CAMPOS <<<<<<<<<<<<<<<<<<<<<<<<<<
 func (h *usuariosHandler) Patch() gin.HandlerFunc {
 
     type Request struct {
@@ -122,6 +256,7 @@ func (h *usuariosHandler) Patch() gin.HandlerFunc {
 
     return func(c *gin.Context) {
        
+		
 		/*token := c.GetHeader("TOKEN")
         if token == "" || token != os.Getenv("TOKEN") {
             web.Failure(c, http.StatusUnauthorized, errors.New("invalid token"))
@@ -133,6 +268,7 @@ func (h *usuariosHandler) Patch() gin.HandlerFunc {
             web.Failure(c, http.StatusBadRequest, errors.New("invalid JSON"))
             return
         }
+
         idParam := c.Param("id")
         id, err := strconv.Atoi(idParam)
         if err != nil {
@@ -140,7 +276,7 @@ func (h *usuariosHandler) Patch() gin.HandlerFunc {
             return
         }
 
-        // Verificar si la imagen existe antes de actualizar
+        // Verificar si el odontólogo existe antes de actualizar
         _, err = h.s.BuscarUsuario(id)
         if err != nil {
             web.Failure(c, http.StatusNotFound, errors.New("odontologo not found"))
@@ -155,15 +291,15 @@ func (h *usuariosHandler) Patch() gin.HandlerFunc {
         if r.Email != "" {
             update.Email = r.Email
         }
-		if r.Telefono != "" {
+        if r.Telefono != "" {
             update.Telefono = r.Telefono
         }
 		if r.Password != "" {
             update.Password = r.Password
         }
 
-        // Actualizar la imagen
-        p, err := h.s.UpdateUsuario(id, update)
+        // Actualizar el usuario
+        p, err := h.s.Update(id, update)
         if err != nil {
             web.Failure(c, http.StatusConflict, err)
             return
@@ -171,31 +307,4 @@ func (h *usuariosHandler) Patch() gin.HandlerFunc {
 
         web.Success(c, http.StatusOK, p)
     }
-}
-
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ELIMINAR UNA IMAGEN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-func (h *usuariosHandler) DeleteUsuario() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token := c.GetHeader("TOKEN")
-		if token == "123456" {
-			// Permitir la eliminación de la imagen con el token correcto
-			idParam := c.Param("id")
-			id, err := strconv.Atoi(idParam)
-			if err != nil {
-				web.Failure(c, 400, errors.New("invalid id"))
-				return
-			}
-			err = h.s.DeleteUsuario(id)
-			if err != nil {
-				web.Failure(c, 404, err)
-				return
-			}
-			// Se elimina el usuario correctamente, enviar mensaje de éxito
-			c.JSON(200, gin.H{"message": "El usuario se elimino correctamente"})
-		} else {
-			// Token no válido
-			web.Failure(c, 401, errors.New("invalid token"))
-			return
-		}
-	}
 }

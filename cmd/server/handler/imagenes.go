@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -27,26 +28,25 @@ var ultimaImagenID int = 1
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREA NUEVA IMAGEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (h *imagenesHandler) Post() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var imagen domain.Imagen
-		imagen.ID = ultimaImagenID
-		ultimaImagenID++
-		err := c.ShouldBindJSON(&imagen)
-		if err != nil {
-			web.Failure(c, 400, errors.New("invalid json"))
-			return
-		}
-		// Crear la imagen utilizando el servicio
-		createdImagen, err := h.s.CrearImagen(imagen)
-		if err != nil {
-			web.Failure(c, 500, errors.New("failed to create a new turno"))
-			return
-		}
-		// Devolver la imagen creado con su ID asignado a la base de datos
-		c.JSON(200, createdImagen)
-	}	
-}
+    return func(c *gin.Context) {
+        var imagenes []domain.Imagen
+        err := c.ShouldBindJSON(&imagenes)
+        if err != nil {
+            web.Failure(c, 400, fmt.Errorf("invalid json: %w", err))
+            return
+        }
 
+        // Intenta crear las imágenes utilizando el servicio
+        err = h.s.CrearImagenes(imagenes)
+        if err != nil {
+            web.Failure(c, 500, fmt.Errorf("failed to create images: %w", err))
+            return
+        }
+
+        // Si no hay error, devolver un mensaje de éxito
+        web.Success(c, 200, "Imágenes creadas correctamente")
+    }
+}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE IMAGEN POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (h *imagenesHandler) GetByID() gin.HandlerFunc {
 	return func(c *gin.Context) {

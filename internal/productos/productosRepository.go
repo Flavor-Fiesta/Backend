@@ -11,11 +11,12 @@ import (
 
 type Repository interface {
 
+    CrearProducto(p domain.Producto) (domain.Producto, error)
 	BuscarProducto(id int) (domain.Producto, error)
     BuscarTodosLosProductos() ([]domain.Producto, error)
-	CrearProducto(p domain.Producto) (domain.Producto, error)
 	UpdateProducto(id int, p domain.Producto) (domain.Producto, error)
 	DeleteProducto(id int) error
+    ObtenerNombreCategoria(id int) (string, error) // Nuevo método agregado
 }
 
 type repository struct {
@@ -29,24 +30,37 @@ func NewRepository(storage store.StoreInterfaceProducto) Repository {
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR PRODUCTO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 func (r *repository) CrearProducto(p domain.Producto) (domain.Producto, error) {
-    // Crear el producto en el almacenamiento
+	err := r.storage.CrearProducto(p)
+	if err != nil {
+		log.Printf("Error al crear el producto %v: %v\n", p, err)
+		return domain.Producto{}, fmt.Errorf("error creando producto: %w", err)
+	}
+	return p, nil
+}
+
+func (r *repository) ObtenerNombreCategoria(idCategoria int) (string, error) {
+	return r.storage.ObtenerNombreCategoria(idCategoria)
+}
+
+
+/*func (r *repository) CrearProducto(p domain.Producto) (domain.Producto, error) {
     err := r.storage.CrearProducto(p)
     if err != nil {
-        // Agregar registro de error detallado
         log.Printf("Error al crear el producto %v: %v\n", p, err)
         return domain.Producto{}, fmt.Errorf("error creando producto: %w", err)
     }
     return p, nil
 }
+*/
+
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR PRODUCTO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 func (r *repository) BuscarProducto(id int) (domain.Producto, error) {
 	producto, err := r.storage.BuscarProducto(id)
 	if err != nil {
-		return domain.Producto{}, errors.New("product not found")
+		return domain.Producto{}, errors.New("producto not found")
 	}
 	return producto, nil
-
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR TODOS LOS PRODUCTOS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -89,21 +103,26 @@ func (r *repository) Patch(id int, updatedFields map[string]interface{}) (domain
             if nombre, ok := value.(string); ok {
                 producto.Nombre = nombre
             }
-        case "Codigo":
-            if codigo, ok := value.(string); ok {
-                producto.Codigo = codigo
+        case "Descripcion":
+            if descripcion, ok := value.(string); ok {
+                producto.Descripcion = descripcion
             }
-        case "Categoria":
+ /*       case "Categoria":
             if categoria, ok := value.(string); ok {
                 producto.Categoria = categoria
             }
-        case "Fecha_De_Alta":
-            if fecha_de_alta, ok := value.(string); ok {
-                producto.FechaDeAlta = fecha_de_alta
+            */
+        case "Precio":
+            if precio, ok := value.(float64); ok {
+                producto.Precio = precio
             }
-        case "Fecha_De_Vencimiento":
-            if fecha_de_vencimiento, ok := value.(string); ok {
-                producto.FechaDeVencimiento = fecha_de_vencimiento
+        case "Stock":
+            if stock, ok := value.(int); ok {
+                producto.Stock = stock
+            }
+        case "Ranking":
+            if ranking, ok := value.(float64); ok {
+                producto.Ranking = ranking
             }
             
         }

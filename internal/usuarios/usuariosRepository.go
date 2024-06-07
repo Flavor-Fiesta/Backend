@@ -1,21 +1,28 @@
 package usuarios
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/jfcheca/FlavorFiesta/internal/domain"
 	"github.com/jfcheca/FlavorFiesta/pkg/store"
 )
 
 type Repository interface {
-
+    ExisteEmail(email string) (bool, error)         
+    ExisteCelular(celular string) (bool, error)
+    CrearUsuario(p domain.Usuarios) (domain.Usuarios, error)
 	BuscarUsuario(id int) (domain.Usuarios, error)
+    BuscarUsuarioPorEmailYPassword(email, password string) (bool, error)
+    BuscarUsuarioPorEmailYPassword2(email, password string) (domain.Usuarios, error)
+    BuscarUsuarioPorEmailYPassword3(email, password string) (bool, error, domain.Usuarios)
     BuscarTodosLosUsuarios() ([]domain.Usuarios, error)
-	CrearUsuario(p domain.Usuarios) (domain.Usuarios, error)
-	UpdateUsuario(id int, p domain.Usuarios) (domain.Usuarios, error)
 	DeleteUsuario(id int) error
+
+    Update(id int, p domain.Usuarios) (domain.Usuarios, error)
+
+
 }
 
 type repository struct {
@@ -27,14 +34,30 @@ func NewRepository(storage store.StoreInterfaceUsuarios) Repository {
     return &repository{storage}
 }
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR USUARIO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>VALIDACIONES >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 func (r *repository) CrearUsuario(p domain.Usuarios) (domain.Usuarios, error) {
-    // Crear el producto en el almacenamiento
-    err := r.storage.CrearUsuario(p)
+    // Verificar si el email ya existe
+    exists, err := r.storage.ExisteEmail(p.Email)
     if err != nil {
-        // Agregar registro de error detallado
-        log.Printf("Error al crear el usuario %v: %v\n", p, err)
-        return domain.Usuarios{}, fmt.Errorf("error creando usuario: %w", err)
+        return domain.Usuarios{}, err
+    }
+    if exists {
+        return domain.Usuarios{}, errors.New("email already exists")
+    }
+
+    // Verificar si el número de teléfono ya existe
+    exists, err = r.storage.ExisteCelular(p.Telefono)
+    if err != nil {
+        return domain.Usuarios{}, err
+    }
+    if exists {
+        return domain.Usuarios{}, errors.New("phone number already exists")
+    }
+
+    // Si el email y el número de teléfono no existen, continuar con la creación del usuario
+    err = r.storage.CrearUsuario(p)
+    if err != nil {
+        return domain.Usuarios{}, err
     }
     return p, nil
 }
@@ -46,11 +69,40 @@ func (r *repository) BuscarUsuario(id int) (domain.Usuarios, error) {
 		return domain.Usuarios{}, errors.New("usuario not found")
 	}
 	return usuario, nil
-
+}
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR USUARIO POR MAIL Y CLAVE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+func (r *repository) BuscarUsuarioPorEmailYPassword(email, password string) (bool, error) {
+    exists, err := r.storage.BuscarUsuarioPorEmailYPassword(email, password)
+    if err != nil {
+        return false, errors.New("user not found")
+    }
+    return exists, nil
+}
+//este trae todos los datos completos
+func (r *repository) BuscarUsuarioPorEmailYPassword2(email, password string) (domain.Usuarios, error) {
+	usuario, err := r.storage.BuscarUsuarioPorEmailYPassword2(email, password)
+	if err != nil {
+		return domain.Usuarios{}, errors.New("usuario not found")
+	}
+	return usuario, nil
+}
+//////////////////////////////////////////
+func (r *repository) BuscarUsuarioPorEmailYPassword3(email, password string) (bool, error, domain.Usuarios) {
+    exists, err, usuario := r.storage.BuscarUsuarioPorEmailYPassword3(email, password)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return false, errors.New("usuario not found"), domain.Usuarios{}
+        }
+        return false, err, domain.Usuarios{}
+    }
+    return exists, nil, usuario
 }
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR TODOS LOS USUARIO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+
+
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR TODOS LOS USUARIOS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 func (r *repository) BuscarTodosLosUsuarios() ([]domain.Usuarios, error) {
 	usuarios, err := r.storage.BuscarTodosLosUsuarios()
 	if err != nil {
@@ -60,28 +112,51 @@ func (r *repository) BuscarTodosLosUsuarios() ([]domain.Usuarios, error) {
 }
 
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZAR USUARIO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-func (r *repository) UpdateUsuario(id int, p domain.Usuarios) (domain.Usuarios, error) {
-    // Verificar si el usuario existe por su ID
-    exists, err := r.storage.ExistsByIDUsuario(id)
-    if err != nil {
-        return domain.Usuarios{}, fmt.Errorf("error al verificar si el usuario existe: %v", err)
-    }
-    if !exists {
-        return domain.Usuarios{}, fmt.Errorf("usuario con ID %d no encontrado", id)
-    }
 
-    // Actualizar el usuario en el almacenamiento
-    err = r.storage.UpdateUsuario(id, p)
-    if err != nil {
-        return domain.Usuarios{}, fmt.Errorf("error al actualizar el usuario: %v", err)
-    }
 
-    return p, nil
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DELETE USUARIO >>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+// DeleteUsuario elimina un usuario del repositorio
+func (r *repository) DeleteUsuario(id int) error {
+    err := r.storage.DeleteUsuario(id)
+    if err != nil {
+        return err
+    }
+    return nil
 }
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> VERIFICACIONES A LA DB >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+// Implementación de los métodos ExisteEmail y ExisteCelular
+func (r *repository) ExisteEmail(email string) (bool, error) {
+    return r.storage.ExisteEmail(email)
+}
+
+func (r *repository) ExisteCelular(celular string) (bool, error) {
+    return r.storage.ExisteCelular(celular)
+}
+
+
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZAR USUARIO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+// UpdateUsuario actualiza un usuario en el almacenamiento.
+func (r *repository) Update(id int, p domain.Usuarios) (domain.Usuarios, error) {
+
+	err := r.storage.Update(p)
+	if err != nil {
+		return domain.Usuarios{}, errors.New("error updating product")
+	}
+	return p, nil
+}
+
+
+
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PATCH USUARIO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-func (r *repository) PatchUsuario(id int, updatedFields map[string]interface{}) (domain.Usuarios, error) {
-    // Obtener el usuario por su ID
+func (r *repository) Patch(id int, updatedFields map[string]interface{}) (domain.Usuarios, error) {
+    // Obtener el odontólogo por su ID
     usuario, err := r.BuscarUsuario(id)
     if err != nil {
         return domain.Usuarios{}, err
@@ -106,25 +181,17 @@ func (r *repository) PatchUsuario(id int, updatedFields map[string]interface{}) 
             if password, ok := value.(string); ok {
                 usuario.Password = password
             }
-            
+        // Puedes añadir más campos aquí según sea necesario
+        default:
+            return domain.Usuarios{}, errors.New("campo desconocido: " + field)
         }
     }
 
-// Actualizar la imagen en el almacenamiento
-updatedImagen, err := r.UpdateUsuario(id, usuario)
-if err != nil {
-    return domain.Usuarios{}, err
-}
-
-return updatedImagen, nil
-}
-
-
-// DeleteProducto elimina un producto del repositorio
-func (r *repository) DeleteUsuario(id int) error {
-    err := r.storage.DeleteUsuario(id)
+    // Actualizar el odontólogo en el almacenamiento
+    updatedUsuario, err := r.Update(id, usuario)
     if err != nil {
-        return err
+        return domain.Usuarios{}, err
     }
-    return nil
+
+    return updatedUsuario, nil
 }

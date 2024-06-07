@@ -11,7 +11,7 @@ import (
 type Repository interface {
 
 	BuscarImagen(id int) (domain.Imagen, error)
-	CrearImagen(p domain.Imagen) (domain.Imagen, error)
+	CrearImagenes(imagenes []domain.Imagen) error
 	UpdateImagen(id int, p domain.Imagen) (domain.Imagen, error)
 	DeleteImagen(id int) error
 }
@@ -28,19 +28,18 @@ func NewRepository(storage store.StoreInterfaceImagenes) Repository {
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR IMAGEN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-func (r *repository) CrearImagen(p domain.Imagen) (domain.Imagen, error) {
-	// Crear el odontólogo en el almacenamiento
-	err := r.storage.CrearImagen(p)
-	if err != nil {
-		return domain.Imagen{}, errors.New("error creando paciente")
-	}
-	return p, nil
+func (r *repository) CrearImagenes(imagenes []domain.Imagen) error {
+    err := r.storage.CrearImagenes(imagenes)
+    if err != nil {
+        return errors.New("Error creando imágenes, producto inexistente")
+    }
+    return nil
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR IMAGEN POR ID >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 func (r *repository) BuscarImagen(id int) (domain.Imagen, error) {
 	product, err := r.storage.BuscarImagen(id)
 	if err != nil {
-		return domain.Imagen{}, errors.New("imagen not found")
+		return domain.Imagen{}, errors.New("imagen no encontrada")
 	}
 	return product, nil
 

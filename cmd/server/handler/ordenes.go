@@ -12,10 +12,10 @@ import (
 )
 
 type ordenHandler struct {
-	s orden.Service
+	s ordenes.Service
 }
 
-func NewOrdenHandler(s orden.Service) *ordenHandler {
+func NewOrdenHandler(s ordenes.Service) *ordenHandler {
 	return &ordenHandler{
 		s: s,
 	}

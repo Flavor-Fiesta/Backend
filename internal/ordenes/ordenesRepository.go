@@ -1,4 +1,4 @@
-package orden
+package ordenes
 
 import (
 	"errors"
@@ -77,10 +77,6 @@ func (r *repository) Patch(id int, updatedFields map[string]interface{}) (domain
         case "Total":
             if total, ok := value.(float64); ok {
                 orden.Total = total
-            }
-        case "Estado":
-            if estado, ok := value.(string); ok {
-                orden.Estado = estado
             }
         // Puedes añadir más campos aquí según sea necesario
         default:

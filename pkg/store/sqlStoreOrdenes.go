@@ -30,14 +30,14 @@ func NewSqlStoreOrden(db *sql.DB) StoreInterfaceOrdenes {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR UNA NUEVA ORDEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStore) CrearOrden(orden domain.Orden) error {
-	query := "INSERT INTO ordenes (fechaOrden, total, estado) VALUES (?, ?, ?);"
+    query := "INSERT INTO ordenes (id_usuario, id_estado, fechaOrden, total) VALUES (?, ?, ?, ?);"
 	stmt, err := s.db.Prepare(query)
 	if err != nil {
 		return fmt.Errorf("error preparing query: %w", err)
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(orden.FechaOrden, orden.Total, orden.Estado)
+    res, err := stmt.Exec(orden.ID_Usuario, orden.ID_Estado, orden.FechaOrden, orden.Total)
 	if err != nil {
 		return fmt.Errorf("error executing query: %w", err)
 	}
@@ -53,9 +53,9 @@ func (s *sqlStore) CrearOrden(orden domain.Orden) error {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  BUSCAR ORDEN POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStore) BuscarOrden(id int) (domain.Orden, error) {
 	var orden domain.Orden
-	query := "SELECT id, fechaOrden, total, estado FROM ordenes WHERE id = ?"
+	query := "SELECT id, id_usuario, id_estado, fechaOrden, total FROM ordenes WHERE id = ?"
 
-	err := s.db.QueryRow(query, id).Scan(&orden.ID, &orden.FechaOrden, &orden.Total, &orden.Estado)
+	err := s.db.QueryRow(query, id).Scan(&orden.ID, &orden.ID_Usuario, &orden.ID_Estado, &orden.FechaOrden, &orden.Total)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return domain.Orden{}, errors.New("orden not found")
@@ -68,9 +68,9 @@ func (s *sqlStore) BuscarOrden(id int) (domain.Orden, error) {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA UNA ORDEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStore) UpdateOrden(id int, orden domain.Orden) error {
-	query := "UPDATE ordenes SET fechaOrden = ?, total = ?, estado = ? WHERE id = ?;"
+	query := "UPDATE ordenes SET id_usuario = ?, id_estado = ?, fechaOrden = ?, total = ?, WHERE id = ?;"
 
-	result, err := s.db.Exec(query, orden.FechaOrden, orden.Total, orden.Estado, id)
+	result, err := s.db.Exec(query, orden.ID_Usuario, orden.ID_Estado, orden.FechaOrden, orden.Total, id)
 	if err != nil {
 		return err
 	}

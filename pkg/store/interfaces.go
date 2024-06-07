@@ -6,62 +6,75 @@ import (
 )
 
 type StoreInterfaceProducto interface {
-	// Read devuelve un odontologo por su id
 	BuscarProducto(id int) (domain.Producto, error)
 	BuscarTodosLosProductos() ([]domain.Producto, error)
-	// Create agrega un nuevo odontologo
-	CrearProducto(odonto domain.Producto) error
-	// Update actualiza un odontologo
+	CrearProducto(producto domain.Producto) error
 	UpdateProducto(id int, p domain.Producto) error
-	// Delete elimina un odontologo
 	DeleteProducto(id int) error
-	//
 	ExistsByID(id int) bool
-	// Patch
-    Patch(id int, updatedFields map[string]interface{}) error
+    Patch(id int, updatedFields map[string]interface{}) (domain.Producto, error)
+	ObtenerNombreCategoria(id int) (string, error) // Añadir este método
 }
 
 type StoreInterfaceImagenes interface {
-	// Create agrega un nuevo odontologo
-	CrearImagen(imagen domain.Imagen) error
-	// Read devuelve un odontologo por su id
+//	CrearImagen(imagen domain.Imagen) error
+	CrearImagenes(imagenes []domain.Imagen) error
 	BuscarImagen(id int) (domain.Imagen, error)
-	// Update actualiza un odontologo
 	UpdateImagen(id int, p domain.Imagen) error
-	// Delete elimina un odontologo
 	DeleteImagen(id int) error
-    PatchImagen(id int, updatedFields map[string]interface{}) error	
+	PatchImagen(id int, updatedFields map[string]interface{}) error	
 	ExistsByIDImagen(id int) bool
-
 }
 
 type StoreInterfaceUsuarios interface {
-
+	ExisteEmail(email string) (bool, error)         
+    ExisteCelular(celular string) (bool, error)
 	CrearUsuario(usuario domain.Usuarios) error
 	BuscarUsuario(id int) (domain.Usuarios, error)
+	//BuscarUsuarioPorEmailYPassword(email, password string) (domain.Usuarios, error)
+	BuscarUsuarioPorEmailYPassword(email, password string) (bool, error)
+	BuscarUsuarioPorEmailYPassword2(email, password string) (domain.Usuarios, error)
+	BuscarUsuarioPorEmailYPassword3(email, password string) (bool, error, domain.Usuarios)
 	BuscarTodosLosUsuarios() ([]domain.Usuarios, error)
-	UpdateUsuario(id int, p domain.Usuarios) error
+
 	DeleteUsuario(id int) error
 	ExistsByIDUsuario(id int) (bool, error)
-    PatchUsuario(id int, updatedFields map[string]interface{}) error
-}
-type StoreInterfaceCarritos interface {
 
-	GetCarritoByID(id int) (domain.Carrito, error)
-	CrearCarrito(carrito domain.Carrito) error
-	UpdateCarrito(id int, p domain.Carrito) error
-	DeleteCarrito(id int) error
-	ExistsByIDCarrito(id int) bool
+	Update(usuario domain.Usuarios) error
+	PatchUsuario(id int, updatedFields map[string]interface{}) error
 }
 
-type StoreInterfaceCarritoOrdenes interface {
-
-	GetCarritoOrdenesByID(id int) (domain.CarritosOrden, error)
-	CrearCarritoOrdenes(carrito domain.CarritosOrden) error
-	UpdateCarritoOrdenes(id int, p domain.CarritosOrden) error
-	DeleteCarritoOrdenes(id int) error
-	ExistsByIDCarritoOrdenes(id int) bool
+type StoreInterfaceCategorias interface {
+	CrearCategoria(categoria domain.Categoria) error
+	BuscarCategoria(id int) (domain.Categoria, error)
+	BuscarTodosLasCategorias() ([]domain.Categoria, error)
+	DeleteCategoria(id int) error
+	ExistsByIDCategoria(id int) (bool, error)
+	Update(categoria domain.Categoria) error
+	PatchCategoria(id int, updatedFields map[string]interface{}) error
 }
+
+type StoreInterfaceRoles interface{
+	CrearRol (rol domain.Rol) error
+	BuscarTodosLosRoles() ([]domain.Rol, error)
+	CambiarRol(usuarioID int, nuevoRol string) error
+//	BuscarRol(id int) (domain.Rol, error)
+}
+
+type StoreInterfaceEstados interface{
+    CrearEstados (estado domain.Estado) error
+    BuscarTodosLosEstados() ([]domain.Estado, error)
+    BuscarEstado(id int) (domain.Estado, error)
+}
+type StoreInterfaceOrdenProducto interface{
+    CrearOrdenProducto(op domain.OrdenProducto) error
+    BuscaOrdenProducto(id int) (domain.OrdenProducto, error)
+    UpdateOrdenProducto(id int, p domain.OrdenProducto) error
+    ExistsByID(id int) bool
+
+}
+
+
 
 
 
@@ -77,5 +90,3 @@ type StoreInterfaceCarritoOrdenes interface {
 	// Delete elimina un paciente
 	DeleteProductoImagen(id int) error
 }*/
-
-

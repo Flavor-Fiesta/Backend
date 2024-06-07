@@ -29,6 +29,7 @@ var listaProductos []domain.Producto
 var ultimoProductoID int = 1
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREA UNA NUEVA BEBIDA <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 func (h *productoHandler) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var producto domain.Producto
@@ -41,19 +42,54 @@ func (h *productoHandler) Post() gin.HandlerFunc {
 			return
 		}
 
+		// Inicializar el campo Imagenes como un array vacío para devolver la consulta en postman con array vacio y no NULL
+		producto.Imagenes = []domain.Imagen{}
+
 		// Crear el producto utilizando el servicio
 		createdProducto, err := h.s.CrearProducto(producto)
 		if err != nil {
-			web.Failure(c, 500, errors.New("failed to create producto"))
+			web.Failure(c, 500, errors.New("failed to create producto: " + err.Error()))
 			return
 		}
+
+		// Obtener y asignar el nombre de la categoría
+		categoria, err := h.s.ObtenerNombreCategoria(createdProducto.Id_categoria)
+		if err != nil {
+			web.Failure(c, 500, errors.New("failed to fetch category name: " + err.Error()))
+			return
+		}
+		createdProducto.Categoria = categoria
+
 		// Devolver el producto creado con su ID asignado a la base de datos
 		c.JSON(200, createdProducto)
-
 	}
-
 }
+/*func (h *productoHandler) Post() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var producto domain.Producto
+		producto.ID = ultimoProductoID
+		ultimoProductoID++
+		err := c.ShouldBindJSON(&producto)
+		if err != nil {
+			web.Failure(c, 400, errors.New("invalid json: " + err.Error()))
+			fmt.Println("Error al hacer bind del JSON:", err)
+			return
+		}
+
+        // Crear el producto utilizando el servicio
+        createdProducto, err := h.s.CrearProducto(producto)
+        if err != nil {
+            web.Failure(c, 500, errors.New("failed to create producto: " + err.Error()))
+            return
+        }
+
+        // Devolver el producto creado con su ID asignado a la base de datos
+        c.JSON(200, createdProducto)
+    }
+}
+*/
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE PRODUCTO POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 func (h *productoHandler) BuscarProducto() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idParam := c.Param("id")
@@ -64,9 +100,7 @@ func (h *productoHandler) BuscarProducto() gin.HandlerFunc {
 		}
 		producto, err := h.s.BuscarProducto(id)
 		if err != nil {
-			fmt.Print("aca si")
 			web.Failure(c, 404, errors.New("No se encuentra"))
-			fmt.Print("aca no")
 			return
 		}
 		web.Success(c, 200, producto)
@@ -76,17 +110,15 @@ func (h *productoHandler) BuscarProducto() gin.HandlerFunc {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE TODOS LOS PRODUCTOS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 func (h *productoHandler) GetAll() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		productos, err := h.s.BuscarTodosLosProductos()
-		if err != nil {
-			web.Failure(c, 500, fmt.Errorf("error buscando todos los productos: %w", err))
-			return
-		}
-		web.Success(c, 200, productos)
-	}
+    return func(c *gin.Context) {
+        productos, err := h.s.BuscarTodosLosProductos()
+        if err != nil {
+            web.Failure(c, 500, fmt.Errorf("error buscando todos los productos: %w", err))
+            return
+        }
+        web.Success(c, 200, productos)
+    }
 }
-
-
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA PRODUCTO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 func (h *productoHandler) Put() gin.HandlerFunc {
@@ -119,10 +151,11 @@ func (h *productoHandler) Patch() gin.HandlerFunc {
 	type Request struct {
 
 	Nombre             string     `json:"nombre"`
-    Codigo             string     `json:"codigo"`
+    Descripcion             string     `json:"descripcion"`
     Categoria          string     `json:"categoria"`
-    FechaDeAlta        string     `json:"fechaDeVencimiento"`
-    FechaDeVencimiento string     `json:"fechaDeVencimiento"`
+    Precio        float64     `json:"precio"`
+    Stock int     `json:"stock"`
+	Ranking float64     `json:"ranking"`
 
 	}
 
@@ -161,17 +194,20 @@ func (h *productoHandler) Patch() gin.HandlerFunc {
 		if r.Nombre != "" {
 			update.Nombre = r.Nombre
 		}
-		if r.Codigo != "" {
-			update.Codigo = r.Codigo
+		if r.Descripcion != "" {
+			update.Descripcion = r.Descripcion
 		}
-		if r.Categoria != "" {
+/*		if r.Categoria != "" {
 			update.Categoria = r.Categoria
+		}*/
+		if r.Precio != 0 {
+			update.Precio = r.Precio
 		}
-		if r.FechaDeAlta != "" {
-			update.FechaDeAlta = r.FechaDeAlta
+		if r.Stock != 0 {
+			update.Stock = r.Stock
 		}
-		if r.FechaDeVencimiento != "" {
-			update.FechaDeVencimiento = r.FechaDeVencimiento
+		if r.Ranking != 0 {
+			update.Ranking = r.Ranking
 		}
 
         // Actualizar el producto

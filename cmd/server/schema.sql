@@ -1,64 +1,69 @@
-DROP TABLE IF EXISTS `carrito`;
-DROP TABLE IF EXISTS `carritosorden`;
-DROP TABLE IF EXISTS `productos`;
-DROP TABLE IF EXISTS `imagenes`;
-DROP TABLE IF EXISTS `categoria`;
-DROP TABLE IF EXISTS `usuarios`;
-DROP TABLE IF EXISTS `ordenes`;
-
-CREATE TABLE IF NOT EXISTS productos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(255) NOT NULL,
-    codigo VARCHAR(255) NOT NULL,
-    categoria VARCHAR(255) NOT NULL,
-    fecha_alta VARCHAR(255) NOT NULL,
-    fecha_vencimiento VARCHAR(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS imagenes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    producto_id INT NOT NULL,  
-    titulo VARCHAR(255) NOT NULL,
-    url VARCHAR(255) NOT NULL,
-    FOREIGN KEY (producto_id) REFERENCES productos(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS categoria (
+CREATE TABLE IF NOT EXISTS categorias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
     descripcion VARCHAR(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
+
+CREATE TABLE IF NOT EXISTS productos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_categoria INT,
+    nombre VARCHAR(255) NOT NULL,
+    descripcion VARCHAR(255) NOT NULL,
+--    categoria VARCHAR(255) NOT NULL,
+    precio DECIMAL(50,2) NOT NULL,
+    stock INT NOT NULL,
+    ranking DECIMAL(20,2) NOT NULL,
+    FOREIGN KEY (id_categoria) REFERENCES categorias(id)
+);
+
+CREATE TABLE IF NOT EXISTS imagenes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_producto INT NOT NULL,  -- Agregar este campo para la relación
+    titulo VARCHAR(255) NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    FOREIGN KEY (id_producto) REFERENCES productos(id)
+);
+
+CREATE TABLE IF NOT EXISTS roles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(20) NOT NULL
+);
+
 
 CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     telefono VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    password VARCHAR(255) NOT NULL,
+    id_rol INT,
+    FOREIGN KEY (id_rol) REFERENCES roles(id)
+);
+
+CREATE TABLE IF NOT EXISTS estados (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(20) NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS ordenes (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  id_estado INT NOT NULL,
   fechaOrden VARCHAR(255)  NOT NULL,
   total DECIMAL(10,2) NOT NULL,
-  estado VARCHAR(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+  FOREIGN KEY (id_estado) REFERENCES estados(id)
+);
 
-CREATE TABLE IF NOT EXISTS carrito (
+CREATE TABLE IF NOT EXISTS OrdenProducto (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  usuario_id INT NOT NULL,
-  producto_id INT NOT NULL,  
-  Total DECIMAL(50,0) NOT NULL,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-  FOREIGN KEY (producto_id) REFERENCES productos(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS carritosorden (
-  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  id_carrito INT NOT NULL,
   id_orden INT NOT NULL,
-  Cantidad INT NOT NULL,
-  PrecioUnitario DECIMAL(10,2) NOT NULL,
+  id_producto INT NOT NULL,
+  cantidad INT NOT NULL,
+  total DECIMAL(50,0) NOT NULL,
   FOREIGN KEY (id_orden) REFERENCES ordenes(id),
-  FOREIGN KEY (id_carrito) REFERENCES carrito(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  FOREIGN KEY (id_producto) REFERENCES productos(id)
+);
+
+
+

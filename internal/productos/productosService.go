@@ -13,6 +13,8 @@ type Service interface {
 	CrearProducto(p domain.Producto) (domain.Producto, error)
 	UpdateProducto(id int, p domain.Producto) (domain.Producto, error)
 	DeleteProducto(id int) error
+    ObtenerNombreCategoria(id int) (string, error) // Nuevo método agregado
+    
 
 }
 
@@ -36,23 +38,38 @@ func (s *service) CrearProducto(p domain.Producto) (domain.Producto, error) {
     return productoCreado, nil
 }
 
+func (s *service) ObtenerNombreCategoria(idCategoria int) (string, error) {
+    return s.r.ObtenerNombreCategoria(idCategoria)
+}
+
+
+/*func (s *service) CrearProducto(p domain.Producto) (domain.Producto, error) {
+    // Crear el producto utilizando el repositorio
+    productoCreado, err := s.r.CrearProducto(p)
+    if err != nil {
+        return domain.Producto{}, err
+    }
+    return productoCreado, nil
+}
+*/
+
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE PRODUCTO POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // BuscarProducto busca un producto por su ID y devuelve también los datos de la imagen asociada
 func (s *service) BuscarProducto(id int) (domain.Producto, error) {
-	p, err := s.r.BuscarProducto(id)
+	producto, err := s.r.BuscarProducto(id)
 	if err != nil {
 		return domain.Producto{}, err
 	}
-	return p, nil
+	return producto, nil
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE TODOS LOS PRODUCTOS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *service) BuscarTodosLosProductos() ([]domain.Producto, error) {
-	productos, err := s.r.BuscarTodosLosProductos()
-	if err != nil {
-		return nil, fmt.Errorf("error buscando todos los productos: %w", err)
-	}
-	return productos, nil
+    productos, err := s.r.BuscarTodosLosProductos()
+    if err != nil {
+        return nil, fmt.Errorf("error buscando todos los productos: %w", err)
+    }
+    return productos, nil
 }
 
 
@@ -77,21 +94,25 @@ func (s *service) Patch(id int, updatedFields map[string]interface{}) (domain.Pr
             if nombre, ok := value.(string); ok {
                 producto.Nombre = nombre
             }
-        case "Codigo":
-            if codigo, ok := value.(string); ok {
-                producto.Codigo = codigo
+        case "Descripcion":
+            if descripcion, ok := value.(string); ok {
+                producto.Descripcion = descripcion
             }
-        case "Categoria":
+ /*       case "Categoria":
             if categoria, ok := value.(string); ok {
                 producto.Categoria = categoria
+            }*/
+        case "Precio":
+            if precio, ok := value.(float64); ok {
+                producto.Precio = precio
             }
-        case "Fecha_Alta":
-            if fecha_alta, ok := value.(string); ok {
-                producto.FechaDeAlta = fecha_alta
+        case "Stock":
+            if stock, ok := value.(int); ok {
+                producto.Stock = stock
             }
-        case "Fecha_Vencimiento":
-            if fecha_vencimiento, ok := value.(string); ok {
-                producto.FechaDeVencimiento = fecha_vencimiento
+        case "Ranking":
+            if ranking, ok := value.(float64); ok {
+                producto.Ranking = ranking
             }
         // Puedes añadir más campos aquí según sea necesario
         default:

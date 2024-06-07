@@ -1,4 +1,4 @@
-package orden
+package ordenes
 
 import (
 	"fmt"
@@ -63,10 +63,7 @@ func (s *service) Patch(id int, updatedFields map[string]interface{}) (domain.Or
 			if total, ok := value.(float64); ok {
 				orden.Total = total
 			}
-		case "Estado":
-			if estado, ok := value.(string); ok {
-				orden.Estado = estado
-			}
+
 		default:
 			return domain.Orden{}, fmt.Errorf("campo desconocido: %s", field)
 		}
