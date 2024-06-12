@@ -70,6 +70,8 @@ func (h *usuariosHandler) GetByID() gin.HandlerFunc {
 	}
 }
 
+
+// OBTIENE USUARIO POR ID Y PW Y DEVUELVE UN BOOLEANO Y UN MENSAJE
 func (h *usuariosHandler) GetByEmailAndPassword() gin.HandlerFunc {
     return func(c *gin.Context) {
         email := c.Query("email")

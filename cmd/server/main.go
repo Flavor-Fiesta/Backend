@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,17 +9,20 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jfcheca/FlavorFiesta/cmd/server/handler"
+	//"github.com/jfcheca/FlavorFiesta/cmd/server/middleware"
+    "github.com/jfcheca/FlavorFiesta/internal/auth"
 	"github.com/jfcheca/FlavorFiesta/internal/categorias"
+	"github.com/jfcheca/FlavorFiesta/internal/estados"
 	"github.com/jfcheca/FlavorFiesta/internal/imagenes"
+	"github.com/jfcheca/FlavorFiesta/internal/ordenProducto"
 	"github.com/jfcheca/FlavorFiesta/internal/ordenes"
 	"github.com/jfcheca/FlavorFiesta/internal/productos"
-    "github.com/jfcheca/FlavorFiesta/internal/estados"
-    "github.com/jfcheca/FlavorFiesta/internal/ordenProducto"
 	"github.com/jfcheca/FlavorFiesta/internal/roles"
 	"github.com/jfcheca/FlavorFiesta/internal/usuarios"
 	"github.com/jfcheca/FlavorFiesta/pkg/store"
 	"github.com/joho/godotenv"
-//	"gopkg.in/mail.v2"
+	// "github.com/jfcheca/FlavorFiesta/internal/auth"
+	//	"gopkg.in/mail.v2"
 
 	"io/ioutil"
 	"strings"
@@ -48,13 +50,11 @@ func main() {
     }
     log.Println("Correo de prueba enviado exitosamente")
 */
-    // Cargar variables de entorno desde el archivo .env
-	fmt.Println("YA BASTAAAAAAAAAAAAAAAAA")
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CARGAMOS LAS VARIABLES DE ENTORNO DEL ARCHIVO .ENV >>>>>>>>>>>>>>>>>>>>
     err := godotenv.Load(".env")
     if err != nil {
         log.Fatal("Error al cargar el archivo .env:", err)
     }
-
     dbUser := os.Getenv("DB_USER")
     dbPassword := os.Getenv("DB_PASSWORD")
     dbHost := os.Getenv("DB_HOST")
@@ -127,8 +127,27 @@ func main() {
         c.JSON(http.StatusOK, gin.H{"message": "pong"})
     })
 
-    // Middleware de autenticación
- //   r.Use(middleware.AuthMiddleware())
+////////////////////////////////////////// >>>>>>>>>>>>>> TODO LO REFERIDO A LA AUTENTICACION >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+ /*   r.POST("/api/login", func(c *gin.Context) {
+        var credentials auth.Credentials
+        if err := c.ShouldBindJSON(&credentials); err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+            return
+        }
+
+        token, err := auth.Authenticate(credentials)
+        if err != nil {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+            return
+        }
+
+        c.JSON(http.StatusOK, gin.H{"token": token})
+    })
+*/
+
+
+ //Middleware de autenticación
+  // r.Use(middleware.AuthMiddleware())
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PRODUCTOS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     storage := store.NewSqlStoreProductos(bd)
@@ -211,6 +230,8 @@ func main() {
 	ordenes := r.Group("/ordenes")
 	{
 		ordenes.GET("/:id", ordenHandler.GetOrdenByID())
+        ordenes.GET("/usuario&estado", ordenHandler.GetOrdenByUserIDyOrden())
+        ordenes.GET("/usuario&estadoConDatos", ordenHandler.GetOrdenByUsuarioYEstadoConDatos())
 		ordenes.POST("/crear", ordenHandler.Post())
 		ordenes.PUT("/:id", ordenHandler.Put())
 		ordenes.DELETE("/:id", ordenHandler.Delete())
@@ -228,6 +249,8 @@ func main() {
 	ordenProductos := r.Group("/ordenProductos")
 	{
 		ordenProductos.GET("/:id", ordenProductoHandler.GetByID())
+        ordenProductos.GET("/orden/:idOrden", ordenProductoHandler.BuscarPorIDOrden())
+        ordenProductos.GET("/", ordenProductoHandler.GetAll())
 		ordenProductos.POST("/crear", ordenProductoHandler.Post())
 		ordenProductos.PUT("/:id", ordenProductoHandler.Put())
 	}
@@ -262,6 +285,17 @@ func main() {
         roles.POST("/crear", rolHandler.Post())
     }
 
+    // Authent
+	storageAuth := store.NewSqlStoreUsuarios(bd) // Reuse user store for authentication
+	repoAuth := auth.NewRepository(storageAuth)
+	serviceAuth := auth.NewService(repoAuth)
+	authHandler := handler.NewAuthHandler(serviceAuth)
+
+	authRoutes := r.Group("/auth")
+	{
+		authRoutes.POST("/login", authHandler.Login())
+	}
+    
  /*   // Endpoints protegidos con middleware de rol ADMIN
     adminRoutes := r.Group("/admin")
     adminRoutes.Use(middleware.AdminRoleMiddleware())
@@ -272,4 +306,6 @@ func main() {
 
     // Ejecutar el servidor en el puerto 8080
     r.Run(":8080")
+
+    
 }

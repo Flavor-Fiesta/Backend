@@ -13,13 +13,7 @@ type sqlStoreOrdenes struct {
 }
 
 // StoreInterfaceOrdenes defines the methods for interacting with the `ordenes` table.
-type StoreInterfaceOrdenes interface {
-	CrearOrden(orden domain.Orden) error
-	BuscarOrden(id int) (domain.Orden, error)
-	UpdateOrden(id int, orden domain.Orden) error
-	DeleteOrden(id int) error
-	ExistsByIDOrden(id int) bool
-}
+
 
 // NewSqlStoreOrden creates a new sqlStore for ordenes.
 func NewSqlStoreOrden(db *sql.DB) StoreInterfaceOrdenes {
@@ -64,6 +58,36 @@ func (s *sqlStore) BuscarOrden(id int) (domain.Orden, error) {
 	}
 
 	return orden, nil
+}
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  BUSCAR ORDEN POR USUARIO Y ESTADO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+func (s *sqlStore) BuscarOrdenPorUsuarioYEstado(userID, estadoID string) (bool, error) {
+    var orden domain.Orden
+    query := "SELECT id FROM ordenes WHERE id_usuario = ? AND id_estado = ?"
+
+    err := s.db.QueryRow(query, userID, estadoID).Scan(&orden.ID)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return false, nil
+        }
+        return false, err
+    }
+
+    return true, nil
+}
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  BUSCAR ORDEN POR USUARIO Y ESTADO CON TODOS LOS DATOS <<<<<<<<<<<<<
+func (s *sqlStore) BuscarOrdenPorUsuarioYEstado2(userID, estadoID string) (bool, error, domain.Orden) {
+    var orden domain.Orden
+    query := "SELECT * FROM ordenes WHERE id_usuario = ? AND id_estado = ?"
+
+    err := s.db.QueryRow(query, userID, estadoID).Scan(&orden.ID, &orden.ID_Usuario, &orden.ID_Estado, &orden.FechaOrden, &orden.Total)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return false, err, domain.Orden{}
+        }
+        return false, err, domain.Orden{}
+    }
+    return true, nil, orden
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA UNA ORDEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

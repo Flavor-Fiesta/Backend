@@ -22,16 +22,21 @@ func NewEstadoHandler(s estados.Service) *estadosHandler {
 	}
 }
 
+var estado domain.Estado
+var ultimoEstadoID int = 1
+
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREAR NUEVO ESTADO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (h *estadosHandler) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var estado domain.Estado
-		err := c.ShouldBindJSON(&estado)
-		if err != nil {
-			web.Failure(c, 400, errors.New("invalid json: "+err.Error()))
-			fmt.Println("Error al hacer bind del JSON:", err)
-			return
-		}
+        var estado domain.Estado
+        estado.ID = ultimoEstadoID
+        ultimoEstadoID++
+        err := c.ShouldBindJSON(&estado)
+        if err != nil {
+            web.Failure(c, 400, errors.New("invalid json: " + err.Error()))
+            fmt.Println("Error al hacer bind del JSON:", err)
+            return
+        }
 
 		// Crear el estado utilizando el servicio
 		createdEstado, err := h.s.CrearEstado(estado)

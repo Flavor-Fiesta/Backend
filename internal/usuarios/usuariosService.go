@@ -14,6 +14,7 @@ import (
 	"github.com/jfcheca/FlavorFiesta/internal/domain"
 	"gopkg.in/mail.v2"
 	//"gopkg.in/mail.v2"
+	//"gopkg.in/mail.v2"
 )
 
 type Service interface {
@@ -92,7 +93,7 @@ func enviarConfirmacionEmail(user domain.Usuarios) error {
     m.SetHeader("From", os.Getenv("SMTP_EMAIL"))
     m.SetHeader("To", user.Email)
     m.SetHeader("Subject", "Confirmación de Registro en FlavorFiesta")
-    m.SetBody("text/html", fmt.Sprintf("Hola %s, <br><br> Gracias por registrarte. Por favor, confirma tu correo electrónico haciendo clic en el siguiente enlace: <a href='https://tu-sitio.com/confirmar?email=%s'>Confirmar Email</a>", user.Nombre, user.Email))
+    m.SetBody("text/html", fmt.Sprintf("Hola %s, <br><br> Gracias por registrarte. Por favor, confirma tu correo electrónico haciendo clic en el siguiente enlace: <a href='http://localhost:5173/confirm-email/:token'>Confirmar Email</a>", user.Nombre, user.Email))
 
     d := mail.NewDialer("smtp.gmail.com", 587, os.Getenv("SMTP_EMAIL"), os.Getenv("SMTP_PASSWORD"))
 
@@ -135,7 +136,7 @@ func (s *service) CrearUsuario(u domain.Usuarios) (domain.Usuarios, error) {
         return domain.Usuarios{}, err
     }
 
-    // Enviar correo de confirmación
+   // Enviar correo de confirmación
     if err := enviarConfirmacionEmail(usuarioCreado); err != nil {
         log.Printf("Error sending confirmation email: %v", err)
         return domain.Usuarios{}, fmt.Errorf("error sending confirmation email: %w", err)
@@ -143,6 +144,8 @@ func (s *service) CrearUsuario(u domain.Usuarios) (domain.Usuarios, error) {
 
     return usuarioCreado, nil
 }
+
+
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR USUARIO POR ID >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 func (s *service) BuscarUsuario(id int) (domain.Usuarios, error) {

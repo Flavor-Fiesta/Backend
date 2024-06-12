@@ -21,18 +21,24 @@ func NewOrdenHandler(s ordenes.Service) *ordenHandler {
 	}
 }
 
+var orden domain.Orden
+var ultimaOrdenID int = 1
+//
+
 func (h *ordenHandler) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var ord domain.Orden
-		err := c.ShouldBindJSON(&ord)
-		if err != nil {
-			web.Failure(c, 400, errors.New("invalid json: "+err.Error()))
-			fmt.Println("Error al hacer bind del JSON:", err)
-			return
-		}
+        var orden domain.Orden
+        orden.ID = ultimaOrdenID
+        ultimaOrdenID++
+        err := c.ShouldBindJSON(&orden)
+        if err != nil {
+            web.Failure(c, 400, errors.New("invalid json: " + err.Error()))
+            fmt.Println("Error al hacer bind del JSON:", err)
+            return
+        }
 
 		// Crear la orden utilizando el servicio
-		createdOrd, err := h.s.CrearOrden(ord)
+		createdOrd, err := h.s.CrearOrden(orden)
 		if err != nil {
 			web.Failure(c, 500, errors.New("failed to create order"))
 			return
@@ -58,6 +64,75 @@ func (h *ordenHandler) GetOrdenByID() gin.HandlerFunc {
 		web.Success(c, 200, ord)
 	}
 }
+
+// OBTIENE ORDEN POR ID Y PW Y DEVUELVE UN BOOLEANO Y UN MENSAJE
+func (h *ordenHandler) GetOrdenByUserIDyOrden() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        userID := c.Query("UserID")
+        estadoID := c.Query("EstadoID") // Corregido el nombre del parámetro
+
+        if userID == "" || estadoID == "" {
+            web.Failure(c, 400, errors.New("UserID and EstadoID are required"))
+            return
+        }
+
+        exists, err := h.s.BuscarOrdenPorUsuarioYEstado(userID, estadoID)
+        if err != nil {
+            web.Failure(c, 404, errors.New("Order not found"))
+            return
+        }
+
+        if exists {
+            c.JSON(200, gin.H{
+                "success": true,
+                "message": "Orden encontrada",
+            })
+        } else {
+            c.JSON(200, gin.H{
+                "success": false,
+                "message": "Orden no encontrada",
+            })
+        }
+    }
+}
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OBTIENE ORDEN POR USER Y ESTADO CON DATOS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+func (h *ordenHandler) GetOrdenByUsuarioYEstadoConDatos() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        userID := c.Query("UserID")
+        estadoID := c.Query("EstadoID")
+
+        if userID == "" || estadoID == "" {
+            web.Failure(c, 400, errors.New("UserID and EstadoID are required"))
+            return
+        }
+
+        exists, err, usuario := h.s.BuscarOrdenPorUsuarioYEstado2(userID, estadoID)
+        if err != nil {
+            if err.Error() == "usuario not found" {
+                web.Failure(c, 404, errors.New("User not found"))
+            } else {
+                web.Failure(c, 500, errors.New("Error retrieving user details"))
+            }
+            return
+        }
+
+        if exists {
+            c.JSON(200, gin.H{
+                "success": true,
+                "message": "Usuario encontrado",
+                "usuario": usuario,
+            })
+        } else {
+            c.JSON(200, gin.H{
+                "success": false,
+                "message": "Usuario no encontrado",
+            })
+        }
+    }
+}
+
+
 
 func (h *ordenHandler) Put() gin.HandlerFunc {
 	return func(c *gin.Context) {

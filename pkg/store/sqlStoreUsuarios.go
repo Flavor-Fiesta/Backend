@@ -47,9 +47,9 @@ func (s *sqlStoreUsuarios) CrearUsuario(usuario domain.Usuarios) error {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  BUSCAR USUARIO POR ID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (s *sqlStoreUsuarios) BuscarUsuario(id int) (domain.Usuarios, error) {
 	var usuario domain.Usuarios
-	query := "SELECT id, nombre, email, telefono, password FROM usuarios WHERE id = ?"
+	query := "SELECT id, nombre, email, telefono, password, id_rol FROM usuarios WHERE id = ?"
 
-	err := s.db.QueryRow(query, id).Scan(&usuario.ID, &usuario.Nombre, &usuario.Email, &usuario.Telefono, &usuario.Password)
+	err := s.db.QueryRow(query, id).Scan(&usuario.ID, &usuario.Nombre, &usuario.Email, &usuario.Telefono, &usuario.Password, &usuario.Id_rol)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return domain.Usuarios{}, errors.New("usuario not found")
@@ -78,9 +78,9 @@ func (s *sqlStoreUsuarios) BuscarUsuarioPorEmailYPassword(email, password string
 
 func (s *sqlStoreUsuarios) BuscarUsuarioPorEmailYPassword2(email, password string) (domain.Usuarios, error) {
 	var usuario domain.Usuarios
-	query := "SELECT id, nombre, email, telefono, password FROM usuarios WHERE email = ? AND password = ?"
+	query := "SELECT id, nombre, email, telefono, password, id_rol FROM usuarios WHERE email = ? AND password = ?"
 
-	err := s.db.QueryRow(query, email, password).Scan(&usuario.ID, &usuario.Nombre, &usuario.Email, &usuario.Telefono, &usuario.Password)
+	err := s.db.QueryRow(query, email, password).Scan(&usuario.ID, &usuario.Nombre, &usuario.Email, &usuario.Telefono, &usuario.Password, &usuario.Id_rol)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return domain.Usuarios{}, errors.New("usuario not found")
@@ -95,7 +95,7 @@ func (s *sqlStoreUsuarios) BuscarUsuarioPorEmailYPassword3(email, password strin
 	var usuario domain.Usuarios
 	query := "SELECT * FROM usuarios WHERE email = ? AND password = ?"
 
-	err := s.db.QueryRow(query, email, password).Scan(&usuario.ID, &usuario.Nombre, &usuario.Email, &usuario.Telefono, &usuario.Password)
+	err := s.db.QueryRow(query, email, password).Scan(&usuario.ID, &usuario.Nombre, &usuario.Email, &usuario.Telefono, &usuario.Password, &usuario.Id_rol)
 	if err != nil {
         if err == sql.ErrNoRows {
             return false, err, domain.Usuarios{}

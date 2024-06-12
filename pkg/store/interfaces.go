@@ -66,11 +66,24 @@ type StoreInterfaceEstados interface{
     BuscarTodosLosEstados() ([]domain.Estado, error)
     BuscarEstado(id int) (domain.Estado, error)
 }
+
+type StoreInterfaceOrdenes interface {
+	CrearOrden(orden domain.Orden) error
+	BuscarOrden(id int) (domain.Orden, error)
+	UpdateOrden(id int, orden domain.Orden) error
+	DeleteOrden(id int) error
+	ExistsByIDOrden(id int) bool
+	BuscarOrdenPorUsuarioYEstado(UserID, Estado string) (bool, error)
+	BuscarOrdenPorUsuarioYEstado2(UserID, Estado string) (bool, error, domain.Orden)
+}
+
 type StoreInterfaceOrdenProducto interface{
-    CrearOrdenProducto(op domain.OrdenProducto) error
+    CrearOrdenProducto(op domain.OrdenProducto) (domain.OrdenProducto, error)
     BuscaOrdenProducto(id int) (domain.OrdenProducto, error)
     UpdateOrdenProducto(id int, p domain.OrdenProducto) error
     ExistsByID(id int) bool
+	BuscarTodasLasOrdenesProducto() ([]domain.OrdenProducto, error)
+	BuscarOrdenesProductoPorIDOrden(idOrden int) ([]domain.OrdenProducto, error)
 
 }
 

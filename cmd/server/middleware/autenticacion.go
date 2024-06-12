@@ -9,7 +9,7 @@ import (
 	"github.com/jfcheca/FlavorFiesta/pkg/web"
 )
 
-var jwtKey = []byte("your_secret_key") // Define tu clave secreta
+var jwtKey = []byte("11111") // Define tu clave secreta
 
 // Claims es una estructura que contiene la información de los claims del JWT
 type Claims struct {

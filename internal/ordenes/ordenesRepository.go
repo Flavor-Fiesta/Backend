@@ -1,6 +1,7 @@
 package ordenes
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -13,6 +14,8 @@ type Repository interface {
 	CrearOrden(o domain.Orden) (domain.Orden, error)
 	UpdateOrden(id int, o domain.Orden) (domain.Orden, error)
 	DeleteOrden(id int) error
+	BuscarOrdenPorUsuarioYEstado(UserID, Estado string) (bool, error)
+	BuscarOrdenPorUsuarioYEstado2(UserID, Estado string) (bool, error, domain.Orden)
 }
 
 type repository struct {
@@ -41,6 +44,26 @@ func (r *repository) BuscarOrden(id int) (domain.Orden, error) {
 		return domain.Orden{}, errors.New("orden not found")
 	}
 	return orden, nil
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR ORDEN POR ID USUARIO Y ESTADO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+func (r *repository) BuscarOrdenPorUsuarioYEstado(UserID, Estado string) (bool, error) {
+    exists, err := r.storage.BuscarOrdenPorUsuarioYEstado(UserID, Estado)
+    if err != nil {
+        return false, errors.New("order not found")
+    }
+    return exists, nil
+}
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR ORDEN POR ID USUARIO Y ESTADO CON TODOS LOS DATOS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+func (r *repository) BuscarOrdenPorUsuarioYEstado2(UserID, Estado string) (bool, error, domain.Orden) {
+    exists, err, orden := r.storage.BuscarOrdenPorUsuarioYEstado2(UserID, Estado)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return false, errors.New("orden not found"), domain.Orden{}
+        }
+        return false, err, domain.Orden{}
+    }
+    return exists, nil, orden
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZAR ORDEN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

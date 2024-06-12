@@ -12,6 +12,8 @@ type Service interface {
 	DeleteOrden(id int) error
 	UpdateOrden(id int, p domain.Orden) (domain.Orden, error)
 	Patch(id int, updatedFields map[string]interface{}) (domain.Orden, error)
+	BuscarOrdenPorUsuarioYEstado(UserID, Estado string) (bool, error)
+	BuscarOrdenPorUsuarioYEstado2(UserID, Estado string) (bool, error, domain.Orden)
 }
 
 type service struct {
@@ -39,6 +41,25 @@ func (s *service) BuscarOrden(id int) (domain.Orden, error) {
 		return domain.Orden{}, err
 	}
 	return p, nil
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUSCAR USUARIO POR EMAIL Y CLAVE >>>>>>>>>>>>>>>>>>>>>>>>>>
+func (s *service) BuscarOrdenPorUsuarioYEstado(UserID, Estado string) (bool, error) {
+    exists, err := s.r.BuscarOrdenPorUsuarioYEstado(UserID, Estado)
+    if err != nil {
+        return false, err
+    }
+    return exists, nil
+}
+
+//ESTE TRAE TODOS LOS DATOS COMPLETOS
+func (s *service) BuscarOrdenPorUsuarioYEstado2(UserID, Estado string) (bool, error, domain.Orden) {
+    // Llama a la función correcta en el repositorio para obtener los datos
+    exists, err, orden := s.r.BuscarOrdenPorUsuarioYEstado2(UserID, Estado)
+    if err != nil {
+        return false, err, domain.Orden{}
+    }
+    return exists, nil, orden
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ACTUALIZA UNA ORDEN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

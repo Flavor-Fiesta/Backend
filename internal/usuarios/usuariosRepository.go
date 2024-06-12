@@ -19,7 +19,6 @@ type Repository interface {
     BuscarUsuarioPorEmailYPassword3(email, password string) (bool, error, domain.Usuarios)
     BuscarTodosLosUsuarios() ([]domain.Usuarios, error)
 	DeleteUsuario(id int) error
-
     Update(id int, p domain.Usuarios) (domain.Usuarios, error)
 
 
@@ -78,6 +77,7 @@ func (r *repository) BuscarUsuarioPorEmailYPassword(email, password string) (boo
     }
     return exists, nil
 }
+
 //este trae todos los datos completos
 func (r *repository) BuscarUsuarioPorEmailYPassword2(email, password string) (domain.Usuarios, error) {
 	usuario, err := r.storage.BuscarUsuarioPorEmailYPassword2(email, password)
