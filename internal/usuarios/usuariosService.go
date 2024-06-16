@@ -5,12 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-
-	//"log"
-	//	"os"
 	"regexp"
 	"unicode"
-
 	"github.com/jfcheca/FlavorFiesta/internal/domain"
 	"gopkg.in/mail.v2"
 	//"gopkg.in/mail.v2"
@@ -19,6 +15,7 @@ import (
 
 type Service interface {
     ExisteEmail(email string) (bool, error)
+    ExisteEmail2(email string) (domain.Usuarios, error)
     ExisteCelular(celular string) (bool, error)
     BuscarUsuario(id int) (domain.Usuarios, error)
   //  BuscarUsuarioPorEmailYPassword(email, password string) (domain.Usuarios, error)
@@ -28,10 +25,12 @@ type Service interface {
     BuscarTodosLosUsuarios() ([]domain.Usuarios, error)
     CrearUsuario(p domain.Usuarios) (domain.Usuarios, error)
     DeleteUsuario(id int) error
+    
 
 
 
     Update(id int, p domain.Usuarios) (domain.Usuarios, error)
+    UpdatePassword(id int, newPassword string) (domain.Usuarios, error)
 
 }
 
@@ -294,8 +293,26 @@ func (s *service) Patch(id int, updatedFields map[string]interface{}) (domain.Us
     return updatedUsuario, nil
 }
 
+func (s *service) UpdatePassword(id int, newPassword string) (domain.Usuarios, error) {
+	p, err := s.r.BuscarUsuario(id)
+	if err != nil {
+		return domain.Usuarios{}, err
+	}
 
+	if newPassword != "" {
+		updatedUser := p
+		updatedUser.Password = newPassword
 
+		pUpdated, err := s.r.UpdatePassword(id, updatedUser.Password)
+		if err != nil {
+			return domain.Usuarios{}, err
+		}
+
+		return pUpdated, nil
+	}
+
+	return p, nil
+}
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  VALIDACIONES DE MAIL Y CELULAR >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -303,6 +320,10 @@ func (s *service) Patch(id int, updatedFields map[string]interface{}) (domain.Us
 // Métodos para ExisteEmail y ExisteCelular
 func (s *service) ExisteEmail(email string) (bool, error) {
     return s.r.ExisteEmail(email)
+}
+
+func (s *service) ExisteEmail2(email string) (domain.Usuarios, error) {
+    return s.r.ExisteEmail2(email)
 }
 
 func (s *service) ExisteCelular(celular string) (bool, error) {

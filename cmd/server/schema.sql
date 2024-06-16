@@ -40,6 +40,14 @@ CREATE TABLE IF NOT EXISTS usuarios (
     FOREIGN KEY (id_rol) REFERENCES roles(id)
 );
 
+CREATE TABLE IF NOT EXISTS favoritos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_producto INT NOT NULL,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+    FOREIGN KEY (id_producto) REFERENCES productos(id)
+);
+
 CREATE TABLE IF NOT EXISTS estados (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(20) NOT NULL

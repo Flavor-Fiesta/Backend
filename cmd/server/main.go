@@ -10,6 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jfcheca/FlavorFiesta/cmd/server/handler"
 	//"github.com/jfcheca/FlavorFiesta/cmd/server/middleware"
+    "github.com/jfcheca/FlavorFiesta/internal/favoritos"
     "github.com/jfcheca/FlavorFiesta/internal/auth"
 	"github.com/jfcheca/FlavorFiesta/internal/categorias"
 	"github.com/jfcheca/FlavorFiesta/internal/estados"
@@ -19,6 +20,7 @@ import (
 	"github.com/jfcheca/FlavorFiesta/internal/productos"
 	"github.com/jfcheca/FlavorFiesta/internal/roles"
 	"github.com/jfcheca/FlavorFiesta/internal/usuarios"
+ //   "github.com/jfcheca/FlavorFiesta/internal/favoritos"
 	"github.com/jfcheca/FlavorFiesta/pkg/store"
 	"github.com/joho/godotenv"
 	// "github.com/jfcheca/FlavorFiesta/internal/auth"
@@ -55,6 +57,10 @@ func main() {
     if err != nil {
         log.Fatal("Error al cargar el archivo .env:", err)
     }
+
+    log.Printf("SMTP_EMAIL: %s", os.Getenv("SMTP_EMAIL"))
+    log.Printf("SMTP_PASSWORD: %s", os.Getenv("SMTP_PASSWORD"))
+    
     dbUser := os.Getenv("DB_USER")
     dbPassword := os.Getenv("DB_PASSWORD")
     dbHost := os.Getenv("DB_HOST")
@@ -117,8 +123,8 @@ func main() {
 
     r.Use(cors.New(cors.Config{
         AllowOrigins:     []string{"http://localhost:5173"}, // URL del frontend
-        AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
-        AllowHeaders:     []string{"Origin", "Content-Type"},
+        AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
+        AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
         AllowCredentials: true,
     }))
 
@@ -182,11 +188,25 @@ func main() {
         imagenes.PUT("/:id", imagenHandler.Put())
     }
 
+
+      // Authent
+      storageAuth := store.NewSqlStoreUsuarios(bd) // Reuse user store for authentication
+      repoAuth := auth.NewRepository(storageAuth)
+      serviceAuth := auth.NewService(repoAuth)
+      storageUsuario := store.NewSqlStoreUsuarios(bd)
+      repoUsuario := usuarios.NewRepository(storageUsuario)
+      serviceUsuario := usuarios.NewService(repoUsuario)
+      usuariosHandler := handler.NewUsuarioHandler(serviceUsuario, serviceAuth)
+      authHandler := handler.NewAuthHandler(serviceAuth, serviceUsuario)
+  
+      authRoutes := r.Group("/auth")
+      {
+          authRoutes.POST("/login", authHandler.Login())
+          authRoutes.POST("/forgotPassword", authHandler.ForgotPassword())
+      }
+
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> USUARIOS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    storageUsuario := store.NewSqlStoreUsuarios(bd)
-    repoUsuario := usuarios.NewRepository(storageUsuario)
-    serviceUsuario := usuarios.NewService(repoUsuario)
-    usuariosHandler := handler.NewUsuarioHandler(serviceUsuario)
+
 
     // Rutas para el manejo de usuarios
     usuarios := r.Group("/usuarios")
@@ -199,6 +219,7 @@ func main() {
         usuarios.DELETE("/:id", usuariosHandler.DeleteUsuario())
         usuarios.PUT("/:id", usuariosHandler.Put())
         usuarios.PATCH("/:id", usuariosHandler.Patch())
+        usuarios.PUT("/forgotPassword/:id", usuariosHandler.UpdatePassword())
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CATEGORIAS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -271,6 +292,22 @@ func main() {
         estados.POST("/crear", estadoHandler.Post())
     }
 
+   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FAVORITOS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	// Crear el almacenamiento SQL con la base de datos 'FlavorFiesta'
+    storageFavoritos := store.NewSqlStoreFavoritos(db)
+    repoFavoritos := favoritos.NewRepository(storageFavoritos)
+    serviceFavoritos := favoritos.NewServiceFavoritos(repoFavoritos)
+    favoritoHandler := handler.NewFavoritosHandler(serviceFavoritos)
+
+    // Rutas para el manejo de órdenes
+    favoritos := r.Group("/favoritos")
+    {
+       
+        favoritos.POST("/agregar", favoritoHandler.Post())
+    }
+
+
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ROLES <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     storageRol := store.NewSqlStoreRoles(bd)
@@ -285,16 +322,7 @@ func main() {
         roles.POST("/crear", rolHandler.Post())
     }
 
-    // Authent
-	storageAuth := store.NewSqlStoreUsuarios(bd) // Reuse user store for authentication
-	repoAuth := auth.NewRepository(storageAuth)
-	serviceAuth := auth.NewService(repoAuth)
-	authHandler := handler.NewAuthHandler(serviceAuth)
-
-	authRoutes := r.Group("/auth")
-	{
-		authRoutes.POST("/login", authHandler.Login())
-	}
+  
     
  /*   // Endpoints protegidos con middleware de rol ADMIN
     adminRoutes := r.Group("/admin")

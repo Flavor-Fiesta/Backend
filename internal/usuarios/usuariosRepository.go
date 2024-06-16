@@ -10,7 +10,8 @@ import (
 )
 
 type Repository interface {
-    ExisteEmail(email string) (bool, error)         
+    ExisteEmail(email string) (bool, error)   
+    ExisteEmail2(email string) (domain.Usuarios, error)      
     ExisteCelular(celular string) (bool, error)
     CrearUsuario(p domain.Usuarios) (domain.Usuarios, error)
 	BuscarUsuario(id int) (domain.Usuarios, error)
@@ -20,6 +21,7 @@ type Repository interface {
     BuscarTodosLosUsuarios() ([]domain.Usuarios, error)
 	DeleteUsuario(id int) error
     Update(id int, p domain.Usuarios) (domain.Usuarios, error)
+    UpdatePassword(id int, newPassword string) (domain.Usuarios, error)
 
 
 }
@@ -133,6 +135,14 @@ func (r *repository) ExisteEmail(email string) (bool, error) {
     return r.storage.ExisteEmail(email)
 }
 
+func (r *repository) ExisteEmail2(email string) (domain.Usuarios, error) {
+	usuario, err := r.storage.ExisteEmail2(email)
+	if err != nil {
+		return domain.Usuarios{}, errors.New("usuario not found")
+	}
+	return usuario, nil
+}
+
 func (r *repository) ExisteCelular(celular string) (bool, error) {
     return r.storage.ExisteCelular(celular)
 }
@@ -149,6 +159,27 @@ func (r *repository) Update(id int, p domain.Usuarios) (domain.Usuarios, error) 
 		return domain.Usuarios{}, errors.New("error updating product")
 	}
 	return p, nil
+}
+
+func (r *repository) UpdatePassword(id int, newPassword string) (domain.Usuarios, error) {
+    // Primero, buscar el usuario por su ID
+    p, err := r.BuscarUsuario(id)
+    if err != nil {
+        return domain.Usuarios{}, err
+    }
+
+    // Actualizar la contraseña si se proporcionó una nueva contraseña válida
+    if newPassword != "" {
+        p.Password = newPassword
+    }
+
+    // Llamar al método en storage para actualizar la contraseña
+    updatedUsuario, err := r.storage.UpdatePassword(id, p.Password)
+    if err != nil {
+        return domain.Usuarios{}, err
+    }
+
+    return updatedUsuario, nil
 }
 
 

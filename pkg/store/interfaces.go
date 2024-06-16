@@ -27,7 +27,8 @@ type StoreInterfaceImagenes interface {
 }
 
 type StoreInterfaceUsuarios interface {
-	ExisteEmail(email string) (bool, error)         
+	ExisteEmail(email string) (bool, error) 
+	ExisteEmail2(email string) (domain.Usuarios, error)        
     ExisteCelular(celular string) (bool, error)
 	CrearUsuario(usuario domain.Usuarios) error
 	BuscarUsuario(id int) (domain.Usuarios, error)
@@ -41,6 +42,7 @@ type StoreInterfaceUsuarios interface {
 	ExistsByIDUsuario(id int) (bool, error)
 
 	Update(usuario domain.Usuarios) error
+	UpdatePassword(id int, newPassword string) (domain.Usuarios, error)
 	PatchUsuario(id int, updatedFields map[string]interface{}) error
 }
 
@@ -87,7 +89,10 @@ type StoreInterfaceOrdenProducto interface{
 
 }
 
+type StoreInterfaceFavoritos interface{
+	AgregarFavorito(favorito domain.Favoritos) error
 
+}
 
 
 

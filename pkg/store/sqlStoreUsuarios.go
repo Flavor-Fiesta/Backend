@@ -213,6 +213,21 @@ func (s *sqlStoreUsuarios) ExisteCelular(celular string) (bool, error) {
     return exists, nil
 }
 
+func (s *sqlStoreUsuarios) ExisteEmail2(email string) (domain.Usuarios, error) {
+	var usuario domain.Usuarios
+	query := "SELECT id, nombre, email, telefono, password, id_rol FROM usuarios WHERE email = ?"
+
+	err := s.db.QueryRow(query, email).Scan(&usuario.ID, &usuario.Nombre, &usuario.Email, &usuario.Telefono, &usuario.Password, &usuario.Id_rol)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return domain.Usuarios{}, errors.New("usuario not found")
+		}
+		return domain.Usuarios{}, err
+	}
+
+	return usuario, nil
+}
+
 
 
 
@@ -245,6 +260,26 @@ func (s *sqlStoreUsuarios) Update(p domain.Usuarios) error {
     return nil
 }
 
+
+func (s *sqlStoreUsuarios) UpdatePassword(id int, newPassword string) (domain.Usuarios, error) {
+    // Preparar la consulta SQL para actualizar la contraseña del usuario
+    query := "UPDATE usuarios SET password = ? WHERE id = ?;"
+
+    // Ejecutar la consulta SQL
+    _, err := s.db.Exec(query, newPassword, id)
+    if err != nil {
+        return domain.Usuarios{}, err // Devolver el error si ocurre alguno al ejecutar la consulta
+    }
+
+    // Si todo fue exitoso, retornar el usuario actualizado
+    updatedUsuario := domain.Usuarios{
+        ID:       id,
+        Password: newPassword,
+        // Asegúrate de asignar otros campos necesarios según tu estructura de domain.Usuarios
+    }
+
+    return updatedUsuario, nil
+}
 
 
 
